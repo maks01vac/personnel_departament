@@ -13,4 +13,9 @@ validatesInputData.employeesSchema = (data) => {
     return schema.validate(data);
 }
 
+validatesInputData.isNumber = (Number) =>{
+    const validatesNumber = joi.number().integer().required();
+    return validatesNumber.validate(Number);
+}
+
 module.exports = validatesInputData
