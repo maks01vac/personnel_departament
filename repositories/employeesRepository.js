@@ -30,9 +30,9 @@ employeesRepository.getAll = async function () {
 }
 
 
-employeesRepository.findEmployeeById = async function (id) {
+employeesRepository.findEmployeeById = async function (employeeId) {
     try {
-        const getUserById = await dbPool.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [id]);
+        const getUserById = await dbPool.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [employeeId]);
 
         if (getUserById.rows.length !== 0) {
             return { success: true }
@@ -59,9 +59,9 @@ employeesRepository.findEmployeeById = async function (id) {
 }
 
 
-employeesRepository.getById = async function (id) {
+employeesRepository.getById = async function (employeeId) {
 
-    const employeeSearchResult = await this.findEmployeeById(id);
+    const employeeSearchResult = await this.findEmployeeById(employeeId);
 
     if (employeeSearchResult.success === false) {
         return employeeSearchResult
@@ -69,10 +69,10 @@ employeesRepository.getById = async function (id) {
 
     const client = await dbPool.connect();
     try {
-        const requestToGetEmployeeById = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [id])
+        const requestToGetEmployeeById = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [employeeId])
         return {
             success: true,
-            data: requestToGetEmployeeById.rows
+            data: requestToGetEmployeeById.rows[0]
         }
     }
 
@@ -126,10 +126,10 @@ employeesRepository.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesRepository.updateById = async function (id,employeeData) {
+employeesRepository.updateById = async function (employeeId,employeeData) {
     const { firstname, lastname, sex, birthdate, phone } = employeeData
 
-    const employeeSearchResult = await this.findEmployeeById(id);
+    const employeeSearchResult = await this.findEmployeeById(employeeId);
 
     if (employeeSearchResult.success === false) {
         return employeeSearchResult
@@ -137,10 +137,11 @@ employeesRepository.updateById = async function (id,employeeData) {
 
     const client = await dbPool.connect();
     try {
-        const requestToUpdateEmployeeByIdInDB = 'UPDATE employees SET firstname = $1, lastname =$2, sex=$3, birthdate=$4,phone=$5 WHERE id=$6'
         await client.query('BEGIN;')
-        const queryToUpdateEmployeeById = await client.query(requestToUpdateEmployeeByIdInDB, [firstname, lastname, sex, birthdate, phone,id])
-        console.log(queryToUpdateEmployeeById);
+
+        const requestToUpdateEmployeeByIdInDB = 'UPDATE employees SET firstname = $1, lastname =$2, sex=$3, birthdate=$4,phone=$5 WHERE id=$6'
+        const queryToUpdateEmployeeById = await client.query(requestToUpdateEmployeeByIdInDB, [firstname, lastname, sex, birthdate, phone,employeeId])
+        
         await client.query('COMMIT;')
         return {
             success: true,
@@ -149,7 +150,7 @@ employeesRepository.updateById = async function (id,employeeData) {
 
     catch (err) {
         await client.query('ROLLBACK')
-        logger.error(err, 'error creating new employee from database')
+        logger.error(err, 'error update employee from database')
         return {
             success: false,
             error: {
@@ -163,7 +164,40 @@ employeesRepository.updateById = async function (id,employeeData) {
     }
 }
 
+employeesRepository.deleteById =async function(employeeId){
+    const employeeSearchResult = await this.findEmployeeById(employeeId);
 
+    if (employeeSearchResult.success === false) {
+        return employeeSearchResult
+    }
+    
+    const client = await dbPool.connect()
+    try {
+        await client.query('BEGIN;')
+
+        await client.query('DELETE FROM employees WHERE id=$1', [employeeId])
+
+        await client.query('COMMIT;')
+
+        return { success: true }
+
+    }
+    catch (err) {
+        await client.query('ROLLBACK;');
+
+        logger.error(err, 'error delete employee from database')
+
+        return {
+            success: false,
+            errorMessage: 'Failed to delete data',
+            errorCode: 'errorInDatabase'
+        }
+    }
+    finally {
+        client.release()
+    }
+
+}
 
 
 

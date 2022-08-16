@@ -59,9 +59,9 @@ employeesService.updateById = async function (id,employeeData) {
 
 }
 
-employeesRepository.deleteById =async function(id){
+employeesService.deleteById =async function(id){
     const validatesId = validator.isNumber(Number(id));
-    
+
     if (validatesId.error) {
         return {
             success: false,
@@ -69,10 +69,10 @@ employeesRepository.deleteById =async function(id){
         }
     }
 
-    const resultGetEmployeeById = await employeesRepository.getById(id);
-    return resultGetEmployeeById;
+    const UpdateEmployeeByIdResult = await employeesRepository.deleteById(id);
+    return UpdateEmployeeByIdResult;
 }
-}
+
 
 
 module.exports = employeesService;

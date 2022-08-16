@@ -12,9 +12,12 @@ employeesController.getAll = async function (req, res, next) {
     if (!resultGetAll.success) {
         logger.warn("Entering employeesController.Get: Failure.", resultGetAll); // depends
         res.status(404).send(resultGetAll);
+    } else {
+        res.send(resultGetAll.data);
+        logger.info('get request went well')
     }
-    logger.info('get request went well')
-    res.send(resultGetAll.data);
+    
+    
 };
 
 employeesController.getById = async function (req, res, next) {
@@ -24,8 +27,8 @@ employeesController.getById = async function (req, res, next) {
     if (!resultGetEmployeeById.success) {
         logger.warn('Entering employeesControlle.GET:Failure')
         res.status(404).send(resultGetEmployeeById);
-    }
-    res.send(resultGetEmployeeById);
+    } else res.send(resultGetEmployeeById);
+    
 };
 
 employeesController.createNewEmployee = async function (req, res, next) {
@@ -64,15 +67,15 @@ employeesController.updateById =async function (req, res, next) {
       }
 };
 
-employeesController.deleteById = function (req, res, next) {
+employeesController.deleteById =async function (req, res, next) {
     let id = req.params.id
 
-    const resultGetEmployeeById = await employeesService.getById(id);
+    const resultGetEmployeeById = await employeesService.deleteById(id);
     if (!resultGetEmployeeById.success) {
         logger.warn('Entering employeesControlle.GET:Failure')
         res.status(404).send(resultGetEmployeeById);
-    }
-    res.send(resultGetEmployeeById);
+    } else res.send(resultGetEmployeeById);
+    
 };
 
 
