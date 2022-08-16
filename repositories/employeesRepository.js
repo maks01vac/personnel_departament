@@ -4,9 +4,17 @@ const dbPool = require('../db_pool/db_pool')
 const logger = require('../logger/logger');
 
 employeesRepository.getAll = async function () {
+    logger.debug('Try to connect to database')
     const client = await dbPool.connect();
     try {
-        const requestToGetAllEmployees = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees')
+        logger.debug('Cоnnection was completed')
+        logger.debug('Start transaction');
+        await client.query('BEGIN;')
+
+        const requestToGetAllEmployees = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees');
+
+        await client.query('COMMIT;');
+        logger.debug('Transaction was successfull');
         return {
             success: true,
             data: requestToGetAllEmployees.rows
@@ -19,7 +27,7 @@ employeesRepository.getAll = async function () {
             success: false,
             error: {
                 errorMessage: "Sorry, database is not available",
-                errorCode: "errorInDatabase",
+                errorCode: "ERROR_IN_DATABASE",
             }
         }
     }
@@ -40,7 +48,7 @@ employeesRepository.findEmployeeById = async function (employeeId) {
             success: false,
             error: {
                 errorMessage: 'employee with this id was not found',
-                errorCode: 'idNotFound'
+                errorCode: 'ID_NOT_FOUND'
             }
 
         }
@@ -50,7 +58,7 @@ employeesRepository.findEmployeeById = async function (employeeId) {
             success: false,
             error: {
                 errorMessage: "Sorry, database is not available",
-                errorCode: "errorInDatabase",
+                errorCode: "ERROR_IN_DATABASE",
             }
 
         }
@@ -66,10 +74,17 @@ employeesRepository.getById = async function (employeeId) {
     if (employeeSearchResult.success === false) {
         return employeeSearchResult
     }
-
+    logger.debug('Try to connect to database')
     const client = await dbPool.connect();
     try {
+        logger.debug('Cоnnection was completed')
+        logger.debug('Start transaction');
+        await client.query('BEGIN;');
+
         const requestToGetEmployeeById = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [employeeId])
+
+        await client.query('COMMIT;');
+        logger.debug('Transaction was successfull');
         return {
             success: true,
             data: requestToGetEmployeeById.rows[0]
@@ -95,13 +110,19 @@ employeesRepository.getById = async function (employeeId) {
 employeesRepository.createNewEmployee = async function (employeeData) {
     const { firstname, lastname, sex, birthdate, phone } = employeeData
 
+    logger.debug('Try to connect to database');
     const client = await dbPool.connect();
     try {
+        logger.debug('Cоnnection was completed')
+        logger.debug('Start transaction');
+
         const requestToCreateNewEmployeeInDB = 'INSERT INTO employees(firstname,lastname,sex,birthdate,phone) VALUES($1,$2,$3,$4,$5) RETURNING id'
         await client.query('BEGIN;')
-        const queryToCreateNewEmployee = await client.query(requestToCreateNewEmployeeInDB, [firstname, lastname, sex, birthdate, phone])
-        console.log(queryToCreateNewEmployee);
-        await client.query('COMMIT;')
+
+        const queryToCreateNewEmployee = await client.query(requestToCreateNewEmployeeInDB, [firstname, lastname, sex, birthdate, phone]);
+
+        await client.query('COMMIT;');
+        logger.debug('Transaction was successfull');
         return {
             success: true,
             data: {
@@ -117,7 +138,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
             success: false,
             error: {
                 errorMessage: "Sorry, database is not available",
-                errorCode: "errorInDatabase",
+                errorCode: "ERROR_IN_DATABASE",
             }
         }
     }
@@ -126,7 +147,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesRepository.updateById = async function (employeeId,employeeData) {
+employeesRepository.updateById = async function (employeeId, employeeData) {
     const { firstname, lastname, sex, birthdate, phone } = employeeData
 
     const employeeSearchResult = await this.findEmployeeById(employeeId);
@@ -135,14 +156,18 @@ employeesRepository.updateById = async function (employeeId,employeeData) {
         return employeeSearchResult
     }
 
+    logger.debug('Try to connect to database');
     const client = await dbPool.connect();
     try {
+        logger.debug('Cоnnection was completed')
+        logger.debug('Start transaction');
         await client.query('BEGIN;')
 
         const requestToUpdateEmployeeByIdInDB = 'UPDATE employees SET firstname = $1, lastname =$2, sex=$3, birthdate=$4,phone=$5 WHERE id=$6'
-        const queryToUpdateEmployeeById = await client.query(requestToUpdateEmployeeByIdInDB, [firstname, lastname, sex, birthdate, phone,employeeId])
-        
-        await client.query('COMMIT;')
+        const queryToUpdateEmployeeById = await client.query(requestToUpdateEmployeeByIdInDB, [firstname, lastname, sex, birthdate, phone, employeeId])
+
+        await client.query('COMMIT;');
+        logger.debug('Transaction was successfull');
         return {
             success: true,
         }
@@ -155,7 +180,7 @@ employeesRepository.updateById = async function (employeeId,employeeData) {
             success: false,
             error: {
                 errorMessage: "Sorry, database is not available",
-                errorCode: "errorInDatabase",
+                errorCode: "ERROR_IN_DATABASE",
             }
         }
     }
@@ -164,20 +189,24 @@ employeesRepository.updateById = async function (employeeId,employeeData) {
     }
 }
 
-employeesRepository.deleteById =async function(employeeId){
+employeesRepository.deleteById = async function (employeeId) {
     const employeeSearchResult = await this.findEmployeeById(employeeId);
 
     if (employeeSearchResult.success === false) {
         return employeeSearchResult
     }
-    
-    const client = await dbPool.connect()
+
+    logger.debug('Try to connect to database');
+    const client = await dbPool.connect();
     try {
+        logger.debug('Cоnnection was completed')
+        logger.debug('Start transaction');
         await client.query('BEGIN;')
 
         await client.query('DELETE FROM employees WHERE id=$1', [employeeId])
 
-        await client.query('COMMIT;')
+        await client.query('COMMIT;');
+        logger.debug('Transaction was successfull');
 
         return { success: true }
 
@@ -190,7 +219,7 @@ employeesRepository.deleteById =async function(employeeId){
         return {
             success: false,
             errorMessage: 'Failed to delete data',
-            errorCode: 'errorInDatabase'
+            errorCode: 'ERROR_IN_DATABASE'
         }
     }
     finally {
