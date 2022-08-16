@@ -55,8 +55,23 @@ employeesService.updateById = async function (id,employeeData) {
     }
     const resultUpdateEmployeeById = employeesRepository.updateById(id,employeeData)
 
-    return resultUpdateEmployeeById
+    return resultUpdateEmployeeById;
 
+}
+
+employeesRepository.deleteById =async function(id){
+    const validatesId = validator.isNumber(Number(id));
+    
+    if (validatesId.error) {
+        return {
+            success: false,
+            error: validatesId.error,
+        }
+    }
+
+    const resultGetEmployeeById = await employeesRepository.getById(id);
+    return resultGetEmployeeById;
+}
 }
 
 

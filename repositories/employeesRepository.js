@@ -126,7 +126,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesRepository.updateById = async function () {
+employeesRepository.updateById = async function (id,employeeData) {
     const { firstname, lastname, sex, birthdate, phone } = employeeData
 
     const employeeSearchResult = await this.findEmployeeById(id);
@@ -137,16 +137,13 @@ employeesRepository.updateById = async function () {
 
     const client = await dbPool.connect();
     try {
-        const requestToUpdateEmployeeByIdInDB = 'UPDATE'
+        const requestToUpdateEmployeeByIdInDB = 'UPDATE employees SET firstname = $1, lastname =$2, sex=$3, birthdate=$4,phone=$5 WHERE id=$6'
         await client.query('BEGIN;')
-        const queryToUpdateEmployeeById = await client.query(requestToUpdateEmployeeByIdInDB, [firstname, lastname, sex, birthdate, phone])
+        const queryToUpdateEmployeeById = await client.query(requestToUpdateEmployeeByIdInDB, [firstname, lastname, sex, birthdate, phone,id])
         console.log(queryToUpdateEmployeeById);
         await client.query('COMMIT;')
         return {
             success: true,
-            data: {
-                idNewEmployee: queryToUpdateEmployeeById.rows.id
-            }
         }
     }
 

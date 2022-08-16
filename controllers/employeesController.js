@@ -20,8 +20,6 @@ employeesController.getAll = async function (req, res, next) {
 employeesController.getById = async function (req, res, next) {
     let id = req.params.id
 
-    const validatesId = validator.isNumber(Number(id));
-
     const resultGetEmployeeById = await employeesService.getById(id);
     if (!resultGetEmployeeById.success) {
         logger.warn('Entering employeesControlle.GET:Failure')
@@ -48,15 +46,33 @@ employeesController.createNewEmployee = async function (req, res, next) {
 
 };
 
-employeesController.updateById = function (req, res, next) {
+employeesController.updateById =async function (req, res, next) {
+    const reqBody = req.body;
+    const id =req.params.id
+    logger.info('Entering CourseController.PUT');
+    logger.debug(`Trying to update employee with params:${reqBody} , ${id} `);
 
-    let id = Number(req.params.id)
-    res.send(`${id} update working`);
+    const resultUpdateEmployeeById = await employeesService.updateById(id,reqBody);
+    logger.debug('Trying to update employee with params.', resultUpdateEmployeeById);
+    if (resultUpdateEmployeeById.success) {
+        logger.info('Entering CourseController.PUT: Success');
+        res.status(200).send(resultUpdateEmployeeById);
+      }
+      else {
+        logger.warn("Entering CourseController.POST: Failure.", resultUpdateEmployeeById); // depends
+        res.status(404).send(resultUpdateEmployeeById);
+      }
 };
 
 employeesController.deleteById = function (req, res, next) {
-    let id = Number(req.params.id)
-    res.send(`${id} delete working`);
+    let id = req.params.id
+
+    const resultGetEmployeeById = await employeesService.getById(id);
+    if (!resultGetEmployeeById.success) {
+        logger.warn('Entering employeesControlle.GET:Failure')
+        res.status(404).send(resultGetEmployeeById);
+    }
+    res.send(resultGetEmployeeById);
 };
 
 
