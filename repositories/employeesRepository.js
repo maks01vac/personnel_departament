@@ -97,7 +97,7 @@ employeesRepository.getById = async function (employeeId) {
             success: false,
             error: {
                 errorMessage: "Sorry, database is not available",
-                errorCode: "errorInDatabase",
+                errorCode: "ERROR_IN_DATABASE",
             }
         }
     }
