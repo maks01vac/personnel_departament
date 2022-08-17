@@ -7,67 +7,93 @@ const createServiceErrors = require('./errors/createServiceErrors')
 const employeeSchemaValidator = require('../models/employee/schemaValidator')
 
 employeesService.getAll = async function () {
-    const resultGetAllEmployees = await employeesRepository.getAll();
+    try {
+        const resultGetAllEmployees = await employeesRepository.getAll();
 
-    logger.info('The result data is received')
+        logger.info('The result data is received')
 
-    return resultGetAllEmployees;
+        return resultGetAllEmployees;
+    }
+    catch (err) {
+        return createServiceErrors.unexpectedError(err)
+    }
+
 }
 
 employeesService.getById = async function (id) {
+    try {
+        const validatesId = validator.isNumber(Number(id));
 
-    const validatesId = validator.isNumber(Number(id));
+        if (validatesId.error) {
+            return createServiceErrors.invalidId(validatesId.error);
+        }
 
-    if (validatesId.error) {
-        return createServiceErrors.invalidId(validatesId.error);
+        const resultGetEmployeeById = await employeesRepository.getById(id);
+        return resultGetEmployeeById;
     }
-
-    const resultGetEmployeeById = await employeesRepository.getById(id);
-    return resultGetEmployeeById;
+    catch (err) {
+        return createServiceErrors.unexpectedError(err)
+    }
 }
 
-employeesService.createNewEmployee = async function (employeeData) {
+employeesService.createNewDepartment = async function (employeeData) {
+    try {
+        const resultValidationEmployeeData = employeeSchemaValidator.validateSchema(employeeData);
 
-    const resultValidationEmployeeData = employeeSchemaValidator.validateSchema(employeeData);
-
-    if (resultValidationEmployeeData.error) {
-        return createServiceErrors.invalidData(resultValidationEmployeeData.error);
+        if (resultValidationEmployeeData.error) {
+            return createServiceErrors.invalidData(resultValidationEmployeeData.error);
+        }
+    
+        const resultCreateNewEmployee = await employeesRepository.createNewEmployee(employeeData);
+        return resultCreateNewEmployee;
     }
-
-    const resultCreateNewEmployee = await employeesRepository.createNewEmployee(employeeData);
-    return resultCreateNewEmployee;
+    catch (err) {
+        return createServiceErrors.unexpectedError(err)
+    }
 }
 
 employeesService.updateById = async function (id, employeeData) {
 
-    const validatesId = validator.isNumber(Number(id));
+    try {
+        const validatesId = validator.isNumber(Number(id));
 
-    const resultValidationEmployeeData = employeeSchemaValidator.validateSchema(employeeData);
-
-    if (validatesId.error) {
-
-        return createServiceErrors.invalidId(validatesId.error);
-
-    } else if (resultValidationEmployeeData.error) {
-        return createServiceErrors.invalidData(resultValidationEmployeeData.error);
+        const resultValidationEmployeeData = employeeSchemaValidator.validateSchema(employeeData);
+    
+        if (validatesId.error) {
+    
+            return createServiceErrors.invalidId(validatesId.error);
+    
+        } else if (resultValidationEmployeeData.error) {
+            return createServiceErrors.invalidData(resultValidationEmployeeData.error);
+        }
+    
+        const resultUpdateEmployeeById = employeesRepository.updateById(id, employeeData)
+    
+        return resultUpdateEmployeeById;
+    
     }
-
-    const resultUpdateEmployeeById = employeesRepository.updateById(id, employeeData)
-
-    return resultUpdateEmployeeById;
-
+    catch (err) {
+        return createServiceErrors.unexpectedError(err)
+    }
 }
 
 employeesService.deleteById = async function (id) {
-    const validatesId = validator.isNumber(Number(id));
+    try {
+        const validatesId = validator.isNumber(Number(id));
 
-    if (validatesId.error) {
-        return createServiceErrors.invalidId(validatesId.error);
+        if (validatesId.error) {
+            return createServiceErrors.invalidId(validatesId.error);
+        }
+    
+    
+        const UpdateEmployeeByIdResult = await employeesRepository.deleteById(id);
+        return UpdateEmployeeByIdResult;
+    
+    }
+    catch (err) {
+        return createServiceErrors.unexpectedError(err)
     }
 
-
-    const UpdateEmployeeByIdResult = await employeesRepository.deleteById(id);
-    return UpdateEmployeeByIdResult;
 }
 
 

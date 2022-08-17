@@ -14,16 +14,16 @@ createDatabaseError.dbError = (err) => {
     }
 }
 
-createDatabaseError.idNotFound = (employeeId) => {
-    logger.warn(`Employee with id = ${employeeId} not found`);
+createDatabaseError.idNotFound = (id) => {
+    logger.warn(`Entry with id = ${id} not found`);
 
     return {
         success: false,
         error: {
-            errorMessage: `Employee with id = ${employeeId} not found`,
+            errorMessage: `Entry with id = ${id} not found`,
             errorCode: 'ID_NOT_FOUND',
             details:{
-                idEmployee:employeeId
+                entryId:id
             }
         }
     }
