@@ -1,0 +1,474 @@
+diff --git a/controllers/employeesController.js b/controllers/employeesController.js
+index a496c6d..7a94416 100644
+--- a/controllers/employeesController.js
++++ b/controllers/employeesController.js
+@@ -7,21 +7,25 @@ const mappers = require('../mappers/mappers')
+ const validator = require('../validator/validatesInputData');
+ 
+ employeesController.getAll = async function (req, res, next) {
++
+     logger.info('Entering employeesController:GET')
+     logger.debug('Try get all employees');
++
+     const resultGetAll = await employeesService.getAll()
++
+     if (!resultGetAll.success) {
+         logger.warn("Entering employeesController.Get: Failure.", resultGetAll);
+ 
+         const statusCode = mappers.mapErrorCodeToHttpCode(resultGetAll.error.errorCode);
+ 
+         res.status(statusCode).send(resultGetAll);
++
+     } else {
+         res.send(resultGetAll.data);
+         logger.info('get request went well')
+     }
+-    
+-    
++
++
+ };
+ 
+ employeesController.getById = async function (req, res, next) {
+@@ -36,7 +40,7 @@ employeesController.getById = async function (req, res, next) {
+ 
+         res.status(404).send(resultGetEmployeeById);
+     } else res.send(resultGetEmployeeById);
+-    
++
+ };
+ 
+ employeesController.createNewEmployee = async function (req, res, next) {
+@@ -95,10 +99,10 @@ employeesController.deleteById =async function (req, res, next) {
+         logger.info('Entering employeesController.DELETE: Success');
+         res.send(resultDeleteEmployeeById);
+     }
+-    
++
+ };
+ 
+ 
+ 
+ 
+-module.exports = employeesController;
+\ No newline at end of file
++module.exports = employeesController;
+diff --git a/db_pool/db_pool.js b/db_pool/db_pool.js
+index ebad8b6..bd8fe63 100644
+--- a/db_pool/db_pool.js
++++ b/db_pool/db_pool.js
+@@ -1,6 +1,7 @@
+ const config = require('../config/config')
+ const Pool = require('pg').Pool
+ 
++// или camelCase или snake_case... делай одинаково
+ const db_pool = new Pool(config.database)
+ 
+-module.exports = db_pool;
++module.exports = db_pool; // сюда нужно глобальный catch сделать
+diff --git a/mappers/mappers.js b/mappers/mappers.js
+index 09fccd4..0c723c4 100644
+--- a/mappers/mappers.js
++++ b/mappers/mappers.js
+@@ -1,5 +1,6 @@
+ const mappers = {};
+ 
++// это я бы перенес в /controllers/errors/mapper.js
+ mappers.mapErrorCodeToHttpCode = function (code) {
+     let statusCode
+     switch (code) {
+@@ -20,4 +21,4 @@ mappers.mapErrorCodeToHttpCode = function (code) {
+     return statusCode;
+ }
+ 
+-module.exports = mappers;
+\ No newline at end of file
++module.exports = mappers;
+diff --git a/models/employeesModel.js b/models/employeesModel.js
+index e69de29..cb92c60 100644
+--- a/models/employeesModel.js
++++ b/models/employeesModel.js
+@@ -0,0 +1 @@
++// это не должно быть пустым
+diff --git a/repositories/employeesRepository.js b/repositories/employeesRepository.js
+index e365b70..d3e6386 100644
+--- a/repositories/employeesRepository.js
++++ b/repositories/employeesRepository.js
+@@ -4,8 +4,11 @@ const dbPool = require('../db_pool/db_pool')
+ const logger = require('../logger/logger');
+ 
+ employeesRepository.getAll = async function () {
++
+     logger.debug('Try to connect to database')
++
+     const client = await dbPool.connect();
++
+     try {
+         logger.debug('Cоnnection was completed')
+         logger.debug('Start transaction');
+@@ -14,51 +17,53 @@ employeesRepository.getAll = async function () {
+         const requestToGetAllEmployees = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees');
+ 
+         await client.query('COMMIT;');
++
+         logger.debug('Transaction was successfull');
++
+         return {
+             success: true,
+-            data: requestToGetAllEmployees.rows
++            data   : requestToGetAllEmployees.rows
+         }
+-    }
+ 
+-    catch (err) {
++    } catch (err) {
++
+         logger.error(err, 'error getting all employees from database')
+-        return {
++
++        return { // это везде копипаст, убрать дублирование
+             success: false,
+-            error: {
+-                errorMessage: "Sorry, database is not available",
+-                errorCode: "ERROR_IN_DATABASE",
++            error  : {
++                errorMessage: "Sorry, database is not available", // это не всегда недоступность бащы
++                errorCode   : "ERROR_IN_DATABASE",
+             }
+         }
+-    }
+-    finally {
++
++    } finally {
+         client.release()
+     }
+ 
+ }
+ 
+-
+-employeesRepository.findEmployeeById = async function (employeeId) {
++// а что мешает использовать getById метод везде? зачем нам еще один одинаковый метод?
++employeesRepository.findEmployeeById = async function (employeeId) { // нужно проверять, что параметр не null/undefined
+     try {
+         const getUserById = await dbPool.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [employeeId]);
+ 
+         if (getUserById.rows.length !== 0) {
+-            return { success: true }
++            return {success: true}
+         } else return {
+             success: false,
+-            error: {
++            error  : {
+                 errorMessage: 'employee with this id was not found',
+-                errorCode: 'ID_NOT_FOUND'
++                errorCode   : 'ID_NOT_FOUND'
+             }
+ 
+         }
+-    }
+-    catch (err) {
++    } catch (err) {
+         return {
+             success: false,
+-            error: {
++            error  : {
+                 errorMessage: "Sorry, database is not available",
+-                errorCode: "ERROR_IN_DATABASE",
++                errorCode   : "ERROR_IN_DATABASE",
+             }
+ 
+         }
+@@ -79,7 +84,7 @@ employeesRepository.getById = async function (employeeId) {
+     try {
+         logger.debug('Cоnnection was completed')
+         logger.debug('Start transaction');
+-        await client.query('BEGIN;');
++        await client.query('BEGIN;'); // наверное на селектах давай без транзакции
+ 
+         const requestToGetEmployeeById = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [employeeId])
+ 
+@@ -87,28 +92,25 @@ employeesRepository.getById = async function (employeeId) {
+         logger.debug('Transaction was successfull');
+         return {
+             success: true,
+-            data: requestToGetEmployeeById.rows[0]
++            data   : requestToGetEmployeeById.rows[0]
+         }
+-    }
+-
+-    catch (err) {
++    } catch (err) {
+         logger.error(err, 'error getting employee by id from database')
+         return {
+             success: false,
+-            error: {
++            error  : {
+                 errorMessage: "Sorry, database is not available",
+-                errorCode: "ERROR_IN_DATABASE",
++                errorCode   : "ERROR_IN_DATABASE",
+             }
+         }
+-    }
+-    finally {
++    } finally {
+         client.release()
+     }
+ 
+ }
+ 
+ employeesRepository.createNewEmployee = async function (employeeData) {
+-    const { firstname, lastname, sex, birthdate, phone } = employeeData
++    const {firstname, lastname, sex, birthdate, phone} = employeeData
+ 
+     logger.debug('Try to connect to database');
+     const client = await dbPool.connect();
+@@ -123,32 +125,34 @@ employeesRepository.createNewEmployee = async function (employeeData) {
+ 
+         await client.query('COMMIT;');
+         logger.debug('Transaction was successfull');
+-        return {
++
++        return { // я бы возвращал созданный объект целиком
+             success: true,
+-            data: {
++            data   : {
+                 idNewEmployee: queryToCreateNewEmployee.rows.id
+             }
+         }
+-    }
+ 
+-    catch (err) {
++    } catch (err) {
+         await client.query('ROLLBACK')
++
+         logger.error(err, 'error creating new employee from database')
++
+         return {
+             success: false,
+-            error: {
++            error  : {
+                 errorMessage: "Sorry, database is not available",
+-                errorCode: "ERROR_IN_DATABASE",
++                errorCode   : "ERROR_IN_DATABASE",
+             }
+         }
+-    }
+-    finally {
++    } finally {
+         client.release()
+     }
+ }
+ 
+ employeesRepository.updateById = async function (employeeId, employeeData) {
+-    const { firstname, lastname, sex, birthdate, phone } = employeeData
++
++    const {firstname, lastname, sex, birthdate, phone} = employeeData
+ 
+     const employeeSearchResult = await this.findEmployeeById(employeeId);
+ 
+@@ -158,33 +162,34 @@ employeesRepository.updateById = async function (employeeId, employeeData) {
+ 
+     logger.debug('Try to connect to database');
+     const client = await dbPool.connect();
++
+     try {
+         logger.debug('Cоnnection was completed')
+         logger.debug('Start transaction');
+-        await client.query('BEGIN;')
+ 
++        await client.query('BEGIN;')
++        // updateEmployeeSql
+         const requestToUpdateEmployeeByIdInDB = 'UPDATE employees SET firstname = $1, lastname =$2, sex=$3, birthdate=$4,phone=$5 WHERE id=$6'
+         const queryToUpdateEmployeeById = await client.query(requestToUpdateEmployeeByIdInDB, [firstname, lastname, sex, birthdate, phone, employeeId])
+-
+         await client.query('COMMIT;');
++
+         logger.debug('Transaction was successfull');
+         return {
+             success: true,
+         }
+-    }
+-
+-    catch (err) {
++    } catch (err) {
+         await client.query('ROLLBACK')
++
+         logger.error(err, 'error update employee from database')
++
+         return {
+             success: false,
+-            error: {
++            error  : {
+                 errorMessage: "Sorry, database is not available",
+-                errorCode: "ERROR_IN_DATABASE",
++                errorCode   : "ERROR_IN_DATABASE",
+             }
+         }
+-    }
+-    finally {
++    } finally {
+         client.release()
+     }
+ }
+@@ -198,36 +203,33 @@ employeesRepository.deleteById = async function (employeeId) {
+ 
+     logger.debug('Try to connect to database');
+     const client = await dbPool.connect();
++
+     try {
+         logger.debug('Cоnnection was completed')
+         logger.debug('Start transaction');
+-        await client.query('BEGIN;')
+ 
++        await client.query('BEGIN;')
+         await client.query('DELETE FROM employees WHERE id=$1', [employeeId])
+-
+         await client.query('COMMIT;');
+         logger.debug('Transaction was successfull');
+ 
+-        return { success: true }
++        return {success: true}
+ 
+-    }
+-    catch (err) {
++    } catch (err) {
+         await client.query('ROLLBACK;');
+ 
+         logger.error(err, 'error delete employee from database')
+ 
+         return {
+-            success: false,
++            success     : false,
+             errorMessage: 'Failed to delete data',
+-            errorCode: 'ERROR_IN_DATABASE'
++            errorCode   : 'ERROR_IN_DATABASE'
+         }
+-    }
+-    finally {
++    } finally {
+         client.release()
+     }
+ 
+ }
+ 
+ 
+-
+-module.exports = employeesRepository;
+\ No newline at end of file
++module.exports = employeesRepository;
+diff --git a/services/employeesService.js b/services/employeesService.js
+index da70e46..5dfb614 100644
+--- a/services/employeesService.js
++++ b/services/employeesService.js
+@@ -5,9 +5,10 @@ const employeesRepository = require('../repositories/employeesRepository');
+ const logger = require('../logger/logger');
+ 
+ employeesService.getAll = async function () {
+-
+     const resultGetAllEmployees = await employeesRepository.getAll();
++
+     logger.info('The result data is received')
++
+     return resultGetAllEmployees;
+ }
+ 
+@@ -17,7 +18,8 @@ employeesService.getById = async function (id) {
+ 
+     if (validatesId.error) {
+         logger.warn('Id is not valid');
+-        return {
++
++        return { // писать в лог ошибки валидации тоже
+             success: false,
+             error: {
+                 details: validatesId.error.details,
+@@ -25,7 +27,8 @@ employeesService.getById = async function (id) {
+             },
+         }
+     }
+-    logger.info('Valid id');
++    logger.info('Valid id'); // такие логи только засоряют
++
+     const resultGetEmployeeById = await employeesRepository.getById(id);
+     return resultGetEmployeeById;
+ }
+@@ -33,9 +36,11 @@ employeesService.getById = async function (id) {
+ employeesService.createNewEmployee = async function (employeeData) {
+ 
+     const resultValidationEmployeeData = validator.employeesSchema(employeeData);
++
+     if (resultValidationEmployeeData.error) {
+         logger.warn('Employee data has not been validated');
+-        return {
++
++        return { // аналогично везде. писать в лог детали
+             success: false,
+             error:{
+                 details:resultValidationEmployeeData.error.details,
+@@ -43,15 +48,21 @@ employeesService.createNewEmployee = async function (employeeData) {
+             } ,
+         }
+     }
++
+     logger.info('the employee data is valid')
++
+     const resultCreateNewEmployee = await employeesRepository.createNewEmployee(employeeData);
++
+     return resultCreateNewEmployee
+ }
+ 
+ employeesService.updateById = async function (id,employeeData) {
++
+     const validatesId = validator.isNumber(Number(id));
++
+     const resultValidationEmployeeData = validator.employeesSchema(employeeData);
+ 
++    // упростить блок
+     if (validatesId.error) {
+         logger.warn('Id is not valid');
+         return {
+@@ -72,14 +83,16 @@ employeesService.updateById = async function (id,employeeData) {
+         }
+     }
+ 
+-    logger.info('Valid id');
+-    logger.info('the employee data is valid')
++    logger.info('Valid id'); // аналогично - мусор
++    logger.info('the employee data is valid') // аналогично - мусор
++
+     const resultUpdateEmployeeById = employeesRepository.updateById(id,employeeData)
+ 
+     return resultUpdateEmployeeById;
+ 
+ }
+ 
++// те же комментарии
+ employeesService.deleteById =async function(id){
+     const validatesId = validator.isNumber(Number(id));
+ 
+@@ -100,4 +113,4 @@ employeesService.deleteById =async function(id){
+ 
+ 
+ 
+-module.exports = employeesService;
+\ No newline at end of file
++module.exports = employeesService;
+diff --git a/validator/validatesInputData.js b/validator/validatesInputData.js
+index f341f65..1261403 100644
+--- a/validator/validatesInputData.js
++++ b/validator/validatesInputData.js
+@@ -2,6 +2,7 @@ const joi = require('joi');
+ 
+ const validatesInputData = {};
+ 
++// это я бы перенес в models/employee/schema.js
+ validatesInputData.employeesSchema = (data) => {
+     const schema = joi.object({
+         firstname:joi.string().min(3).max(20).required(),
+@@ -18,4 +19,4 @@ validatesInputData.isNumber = (Number) =>{
+     return validatesNumber.validate(Number);
+ }
+ 
+-module.exports = validatesInputData
+\ No newline at end of file
++module.exports = validatesInputData

@@ -7,7 +7,7 @@ CREATE TABLE employees(
     lastname CHARACTER VARYING(30) NOT NULL,
     sex CHARACTER VARYING(15) NOT NULL,
     birthdate DATE NOT NULL,
-    phone INTEGER NOT NULL
+    phone CHARACTER VARYING(20) NOT NULL
 );
 
 CREATE TABLE department(
