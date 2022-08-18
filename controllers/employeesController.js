@@ -82,6 +82,25 @@ employeesController.assignPositionToEmployee =async function (req, res, next) {
       }
 };
 
+employeesController.updatePositionToEmployee = async function (req, res, next) {
+    const reqBody = req.body;
+    const id =req.params.id
+    logger.info('Entering employeesController.POST');
+    logger.debug(`trying to update position to an employee with params:${reqBody} , ${id} `);
+
+    const resultUpdatePositionToEmployee = await employeesService.updatePositionToEmployee(id,reqBody);
+    logger.debug('trying to update position to an employee with params.', resultUpdatePositionToEmployee);
+    if (resultUpdatePositionToEmployee.success) {
+        logger.info('Entering employeesController.POST: Success');
+        res.status(200).send(resultUpdatePositionToEmployee);
+      }
+      else {
+        logger.warn("Entering employeesController.POST: Failure.", resultUpdatePositionToEmployee);
+        const statusCode = mappers.mapErrorCodeToHttpCode(resultUpdatePositionToEmployee.error.errorCode);
+        res.status(statusCode).send(resultUpdatePositionToEmployee);
+      }
+};
+
 employeesController.updateById =async function (req, res, next) {
     const reqBody = req.body;
     const id =req.params.id

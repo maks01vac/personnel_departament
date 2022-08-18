@@ -60,7 +60,7 @@ employeesService.assignPositionToEmployee = async function(employeeId,positionDa
     try {
         const validatesId = validator.isNumber(Number(employeeId));
         const validatesPositionData = employeeSchemaValidator.positionAssignmentSchema(positionData);
-        const positionSearch = positionRepository.getById(positionData.position);
+        const positionSearch =await positionRepository.getById(positionData.position);
     
         if (validatesId.error) {
             logger.warn('Id not valid');
@@ -79,6 +79,35 @@ employeesService.assignPositionToEmployee = async function(employeeId,positionDa
 
         const resultAssignPositionToEmployee =employeesRepository.assignPositionToEmployee(employeeId,positionData)
         return resultAssignPositionToEmployee
+    }
+    catch (err) {
+        logger.error("An unexpected error has occurred.Details",err)
+        return createServiceErrors.unexpectedError(err)
+    }
+}
+
+employeesService.updatePositionToEmployee = async function(employeeId,positionData){
+    try {
+        const validatesId = validator.isNumber(Number(employeeId));
+        const validatesPositionData = employeeSchemaValidator.positionAssignmentSchema(positionData);
+        const positionSearch = await positionRepository.getById(positionData.position);
+    
+        if (validatesId.error) {
+            logger.warn('Id not valid');
+            return createServiceErrors.invalidId(validatesId.error);
+
+        }else if (validatesPositionData.error){
+            logger.warn('Position data not valid');
+            return createServiceErrors.invalidData(validatesPositionData.error);
+
+        } else if(positionSearch.success===false){
+            logger.warn('This position does not exist.')
+            return positionSearch
+
+        }
+
+        const resultUpdatePositionToEmployee =employeesRepository.updatePositionToEmployee(employeeId,positionData)
+        return resultUpdatePositionToEmployee
     }
     catch (err) {
         logger.error("An unexpected error has occurred.Details",err)

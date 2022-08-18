@@ -109,13 +109,13 @@ employeesRepository.assignPositionToEmployee = async function (employeeId, posit
     console.log(position);
     const employeeSearchResult = await this.getById(employeeId);
     console.log(employeeSearchResult.data.position)
-    if(employeeSearchResult.success === false){
-        logger.warn('employee with this id not found',employeeSearchResult)
+    if (employeeSearchResult.success === false) {
+        logger.warn('employee with this id not found', employeeSearchResult)
         return employeeSearchResult
     }
 
-    if(employeeSearchResult.data.position !==null ){
-        logger.warn('the employee already has a position',employeeSearchResult)
+    if (employeeSearchResult.data.position !== null) {
+        logger.warn('the employee already has a position', employeeSearchResult)
         return createDatabaseError.positionAlreadyExists(employeeId);
     }
 
@@ -144,8 +144,56 @@ employeesRepository.assignPositionToEmployee = async function (employeeId, posit
     } finally {
         client.release()
     }
+}
 
-    
+
+employeesRepository.updatePositionToEmployee = async function (employeeId, positionData) {
+    const { position } = positionData;
+
+    const employeeSearchResult = await this.getById(employeeId);
+
+    if (employeeSearchResult.success === false) {
+        logger.warn('employee with this id not found', employeeSearchResult)
+        return employeeSearchResult
+    }
+
+    if (employeeSearchResult.data.position === null) {
+        const errorNoPosition = createDatabaseError.noPosition(employeeId)
+        logger.warn('employee has no position', errorNoPosition)
+        return errorNoPosition;
+    }
+
+    if (employeeSearchResult.data.position.id == position) {
+        const errorSamePosition = createDatabaseError.samePosition(employeeId)
+        logger.warn('this employee has the same position', errorSamePosition)
+        return errorSamePosition;
+    }
+
+    const client = await dbPool.connect();
+    try {
+        logger.debug('Connection completed')
+        logger.debug('Start transaction');
+
+        const updatePositionSql = 'UPDATE employee_position SET id_position=$1 WHERE id_employee=$2'
+        await client.query('BEGIN;')
+
+        await client.query(updatePositionSql, [position, employeeId]);
+
+        await client.query('COMMIT;');
+        logger.debug('Transaction was successful');
+
+        return {
+            success: true,
+        }
+
+    } catch (err) {
+
+        await client.query('ROLLBACK')
+        return createDatabaseError.dbError(err);
+
+    } finally {
+        client.release()
+    }
 }
 
 employeesRepository.updateById = async function (employeeId, employeeData) {

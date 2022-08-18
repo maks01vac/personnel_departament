@@ -42,4 +42,30 @@ createDatabaseError.positionAlreadyExists =(id)=>{
     }
 }
 
+createDatabaseError.noPosition =(id)=>{
+    return {
+        success:false,
+        error:{
+            errorMessage:`This employee has no position. Please add a position using the appropriate method`,
+            errorCode:'NO_POSITION',
+            details:{
+                idEmployee:id
+            }
+        }
+    }
+}
+
+createDatabaseError.samePosition =(id)=>{
+    return {
+        success:false,
+        error:{
+            errorMessage:`This employee already has this position`,
+            errorCode:'SAME_POSITION',
+            details:{
+                idEmployee:id
+            }
+        }
+    }
+}
+
 module.exports = createDatabaseError
