@@ -2,9 +2,10 @@ const employeesService = {};
 
 const validator = require('../validator/validatesInputData');
 const employeesRepository = require('../repositories/employeesRepository');
+const positionRepository = require('../repositories/positionRepository');
 const logger = require('../logger/logger');
 const createServiceErrors = require('./errors/createServiceErrors')
-const employeeSchemaValidator = require('../models/employee/schemaValidator')
+const employeeSchemaValidator = require('../models/employee/schemaValidator');
 
 employeesService.getAll = async function () {
     try {
@@ -46,6 +47,33 @@ employeesService.createNewDepartment = async function (employeeData) {
     
         const resultCreateNewEmployee = await employeesRepository.createNewEmployee(employeeData);
         return resultCreateNewEmployee;
+    }
+    catch (err) {
+        return createServiceErrors.unexpectedError(err)
+    }
+}
+
+employeesService.assignPositionToEmployee = async function(employeeId,positionData){
+    try {
+        const validatesId = validator.isNumber(Number(employeeId));
+        const validatesPositionData = employeeSchemaValidator.positionAssignmentSchema(positionData);
+        const positionSearch = positionRepository.getById(positionData.position);
+    
+        if (validatesId.error) {
+            return createServiceErrors.invalidId(validatesId.error);
+
+        }else if (validatesPositionData.error){
+
+            return createServiceErrors.invalidData(validatesPositionData.error);
+
+        } else if(positionSearch.success===false){
+
+            return positionSearch
+
+        }
+
+        const resultAssignPositionToEmployee =employeesRepository.assignPositionToEmployee(employeeId,positionData)
+        return resultAssignPositionToEmployee
     }
     catch (err) {
         return createServiceErrors.unexpectedError(err)

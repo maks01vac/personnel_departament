@@ -8,6 +8,7 @@ mappers.mapErrorCodeToHttpCode = function (code) {
             statusCode = 400;
             break;
         case 'ID_NOT_FOUND':
+        case 'POSITION_ALREADY_EXISTS':
             statusCode = 404;
             break;
         case 'ERROR_IN_DATABASE':

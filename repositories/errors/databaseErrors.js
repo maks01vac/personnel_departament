@@ -29,4 +29,17 @@ createDatabaseError.idNotFound = (id) => {
     }
 }
 
+createDatabaseError.positionAlreadyExists =(id)=>{
+    return {
+        success:false,
+        error:{
+            errorMessage:`The employee with id=${id} already has a position.If you want to change the position of this employee, select the appropriate method`,
+            errorCode:'POSITION_ALREADY_EXISTS',
+            details:{
+                idEmployee:id
+            }
+        }
+    }
+}
+
 module.exports = createDatabaseError

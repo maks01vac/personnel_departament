@@ -20,7 +20,7 @@ employeesController.getAll = async function (req, res, next) {
         res.status(statusCode).send(resultGetAll);
 
     } else {
-        res.send(resultGetAll.data);
+        res.send(resultGetAll);
         logger.info('get request went well')
     }
 
@@ -61,6 +61,25 @@ employeesController.createNewEmployee = async function (req, res, next) {
         res.status(statusCode).send(resultCreateNewEmployee);
       }
 
+};
+
+employeesController.assignPositionToEmployee =async function (req, res, next) {
+    const reqBody = req.body;
+    const id =req.params.id
+    logger.info('Entering employeesController.POST');
+    logger.debug(`trying to assign a position to an employee with params:${reqBody} , ${id} `);
+
+    const resultAssignPositionToEmployee = await employeesService.assignPositionToEmployee(id,reqBody);
+    logger.debug('trying to assign a position to an employee with params.', resultAssignPositionToEmployee);
+    if (resultAssignPositionToEmployee.success) {
+        logger.info('Entering employeesController.POST: Success');
+        res.status(200).send(resultAssignPositionToEmployee);
+      }
+      else {
+        logger.warn("Entering employeesController.POST: Failure.", resultAssignPositionToEmployee);
+        const statusCode = mappers.mapErrorCodeToHttpCode(resultAssignPositionToEmployee.error.errorCode);
+        res.status(statusCode).send(resultAssignPositionToEmployee);
+      }
 };
 
 employeesController.updateById =async function (req, res, next) {

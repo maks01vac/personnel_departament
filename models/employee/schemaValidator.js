@@ -1,6 +1,8 @@
 const joi = require('joi');
 
-exports.validateSchema = (data) => {
+const employeeSchemaValidator = {};
+
+employeeSchemaValidator.validateSchema = (data) => {
     const schema = joi.object({
         firstname:joi.string().min(3).max(20).required(),
         lastname:joi.string().min(3).max(20).required(),
@@ -10,3 +12,11 @@ exports.validateSchema = (data) => {
     })
     return schema.validate(data);
 }
+
+employeeSchemaValidator.positionAssignmentSchema =(data) =>{
+    const schema = joi.object({
+        position:joi.number().integer().required()
+    })
+    return schema.validate(data);
+}
+module.exports = employeeSchemaValidator
