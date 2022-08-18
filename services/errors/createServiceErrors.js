@@ -3,7 +3,7 @@ const logger = require('../../logger/logger');
 const createServiceErrors = {}
 
 createServiceErrors.invalidId = (validationError)=>{
-    logger.warn('Employee data has not been validated',validationError.details[0]);
+    logger.warn('data has not been validated',validationError.details[0]);
 
     return { 
         success: false,
@@ -15,7 +15,7 @@ createServiceErrors.invalidId = (validationError)=>{
 }
 
 createServiceErrors.invalidData = (validationError) =>{
-    logger.warn('Employee id is not valid',validationError.details[0]);
+    logger.warn('id is not valid',validationError.details[0]);
     return {
         success: false,
         error:{
@@ -24,5 +24,17 @@ createServiceErrors.invalidData = (validationError) =>{
         } 
     }
 }
-
+createServiceErrors.unexpectedError = (err) =>{
+    logger.error('Sorry, an unexpected error occurred.Details:',err)
+    return{
+        success:false,
+        error:{
+            errorCode:"UNEXPECTED_ERROR",
+            errorMessage:"Sorry, an unexpected error occurred",
+            details:{
+                errorCodeService:err.code
+            }
+        }
+    }
+}
 module.exports = createServiceErrors;

@@ -13,7 +13,6 @@ CREATE TABLE employees(
 CREATE TABLE department(
     id SERIAL PRIMARY KEY,
     name CHARACTER VARYING(30) NOT NULL,
-    id_director INTEGER REFERENCES employees (id)
 );
 
 CREATE TABLE employee_department(

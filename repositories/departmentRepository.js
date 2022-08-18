@@ -1,30 +1,24 @@
-const employeesRepository = {};
+const departmentRepository = {};
 
 const dbPool = require('../dbPool/dbPool')
 const logger = require('../logger/logger');
 
 const createDatabaseError = require('./errors/databaseErrors')
 
-employeesRepository.getAll = async function () {
+
+departmentRepository.getAll = async function () {
 
     logger.debug('Try to connect to database')
-
     const client = await dbPool.connect();
 
     try {
         logger.debug('Connection completed')
-        logger.debug('Start transaction');
-        await client.query('BEGIN;')
 
-        const requestToGetAllEmployees = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees');
-
-        await client.query('COMMIT;');
-
-        logger.debug('Transaction was successful');
+        const requestToGetAllDepartment = await client.query('SELECT id,name FROM department');
 
         return {
             success: true,
-            data: requestToGetAllEmployees.rows
+            data: requestToGetAllDepartment.rows
         }
 
     } catch (err) {
@@ -38,20 +32,21 @@ employeesRepository.getAll = async function () {
 }
 
 
-employeesRepository.getById = async function (employeeId) {
+
+departmentRepository.getById = async function (departmentId) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
     try {
 
-        const requestToGetEmployeeById = await client.query('SELECT id,firstname,lastname,sex,birthdate,phone FROM employees WHERE id=$1', [employeeId])
+        const requestToGetDepartmentById = await client.query('SELECT id,name FROM department WHERE id=$1', [departmentId])
 
-        if (requestToGetEmployeeById.rows.length !== 0) {
+        if (requestToGetDepartmentById.rows.length !== 0) {
             return {
                 success: true,
-                data: requestToGetEmployeeById.rows[0]
+                data: requestToGetDepartmentById.rows[0]
             }
-        } else return createDatabaseError.idNotFound(employeeId);
+        } else return createDatabaseError.idNotFound(departmentId);
 
 
     } catch (err) {
@@ -64,19 +59,18 @@ employeesRepository.getById = async function (employeeId) {
 
 }
 
-employeesRepository.createNewEmployee = async function (employeeData) {
-    const { firstname, lastname, sex, birthdate, phone } = employeeData
+departmentRepository.createNewDepartment = async function (departmentData) {
+    const { name } = departmentData
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
     try {
         logger.debug('Connection completed')
         logger.debug('Start transaction');
-
-        const newEmployeeSql = 'INSERT INTO employees(firstname,lastname,sex,birthdate,phone) VALUES($1,$2,$3,$4,$5) RETURNING id'
+        const newDepartmentSql = 'INSERT INTO department(name) VALUES($1);'
         await client.query('BEGIN;')
 
-        const queryToCreateNewEmployee = await client.query(newEmployeeSql, [firstname, lastname, sex, birthdate, phone]);
+        const queryToCreateNewDepartment = await client.query(newDepartmentSql, [name]);
 
         await client.query('COMMIT;');
         logger.debug('Transaction was successful');
@@ -84,7 +78,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
         return {
             success: true,
             data: {
-                idNewEmployee: queryToCreateNewEmployee.rows[0]
+                idNewDepartment: queryToCreateNewDepartment.rows[0]
             }
         }
 
@@ -98,14 +92,14 @@ employeesRepository.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesRepository.updateById = async function (employeeId, employeeData) {
+departmentRepository.updateById = async function (departmentId, departmentData) {
 
-    const { firstname, lastname, sex, birthdate, phone } = employeeData
+    const { name } = departmentData
 
-    const employeeSearchResult = await this.getById(employeeId);
+    const departmentSearchResult = await this.getById(departmentId);
 
-    if (employeeSearchResult.success === false) {
-        return employeeSearchResult
+    if (departmentSearchResult.success === false) {
+        return departmentSearchResult
     }
 
     logger.debug('Try to connect to database');
@@ -116,8 +110,8 @@ employeesRepository.updateById = async function (employeeId, employeeData) {
         logger.debug('Start transaction');
 
         await client.query('BEGIN;')
-        const updateEmployeeSql = 'UPDATE employees SET firstname = $1, lastname =$2, sex=$3, birthdate=$4,phone=$5 WHERE id=$6'
-        await client.query(updateEmployeeSql, [firstname, lastname, sex, birthdate, phone, employeeId])
+        const updateDepartmentSql = 'UPDATE department SET name=$1 WHERE id=$2'
+        await client.query(updateDepartmentSql, [name, departmentId])
         await client.query('COMMIT;');
 
         logger.debug('Transaction was successful');
@@ -134,11 +128,11 @@ employeesRepository.updateById = async function (employeeId, employeeData) {
     }
 }
 
-employeesRepository.deleteById = async function (employeeId) {
-    const employeeSearchResult = await this.getById(employeeId);
+departmentRepository.deleteById = async function (departmentId) {
+    const departmentSearchResult = await this.getById(departmentId);
 
-    if (employeeSearchResult.success === false) {
-        return employeeSearchResult
+    if (departmentSearchResult.success === false) {
+        return departmentSearchResult
     }
 
     logger.debug('Try to connect to database');
@@ -149,7 +143,7 @@ employeesRepository.deleteById = async function (employeeId) {
         logger.debug('Start transaction');
 
         await client.query('BEGIN;')
-        await client.query('DELETE FROM employees WHERE id=$1', [employeeId])
+        await client.query('DELETE FROM department WHERE id=$1', [departmentId])
         await client.query('COMMIT;');
         logger.debug('Transaction was successful');
 
@@ -167,4 +161,4 @@ employeesRepository.deleteById = async function (employeeId) {
 }
 
 
-module.exports = employeesRepository;
+module.exports = departmentRepository;
