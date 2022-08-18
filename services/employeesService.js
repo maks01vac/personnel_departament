@@ -16,6 +16,7 @@ employeesService.getAll = async function () {
         return resultGetAllEmployees;
     }
     catch (err) {
+        logger.error("An unexpected error has occurred.Details",err)
         return createServiceErrors.unexpectedError(err)
     }
 
@@ -33,6 +34,7 @@ employeesService.getById = async function (id) {
         return resultGetEmployeeById;
     }
     catch (err) {
+        logger.error("An unexpected error has occurred.Details",err)
         return createServiceErrors.unexpectedError(err)
     }
 }
@@ -49,6 +51,7 @@ employeesService.createNewDepartment = async function (employeeData) {
         return resultCreateNewEmployee;
     }
     catch (err) {
+        logger.error("An unexpected error has occurred.Details",err)
         return createServiceErrors.unexpectedError(err)
     }
 }
@@ -60,14 +63,16 @@ employeesService.assignPositionToEmployee = async function(employeeId,positionDa
         const positionSearch = positionRepository.getById(positionData.position);
     
         if (validatesId.error) {
+            logger.warn('Id not valid');
             return createServiceErrors.invalidId(validatesId.error);
+            
 
         }else if (validatesPositionData.error){
-
+            logger.warn('Position data not valid');
             return createServiceErrors.invalidData(validatesPositionData.error);
 
         } else if(positionSearch.success===false){
-
+            logger.warn('This position does not exist.')
             return positionSearch
 
         }
@@ -76,6 +81,7 @@ employeesService.assignPositionToEmployee = async function(employeeId,positionDa
         return resultAssignPositionToEmployee
     }
     catch (err) {
+        logger.error("An unexpected error has occurred.Details",err)
         return createServiceErrors.unexpectedError(err)
     }
 }
@@ -101,6 +107,7 @@ employeesService.updateById = async function (id, employeeData) {
     
     }
     catch (err) {
+        logger.error("An unexpected error has occurred.Details",err)
         return createServiceErrors.unexpectedError(err)
     }
 }
@@ -119,6 +126,7 @@ employeesService.deleteById = async function (id) {
     
     }
     catch (err) {
+        logger.error("An unexpected error has occurred.Details",err)
         return createServiceErrors.unexpectedError(err)
     }
 

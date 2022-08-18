@@ -110,10 +110,12 @@ employeesRepository.assignPositionToEmployee = async function (employeeId, posit
     const employeeSearchResult = await this.getById(employeeId);
     console.log(employeeSearchResult.data.position)
     if(employeeSearchResult.success === false){
+        logger.warn('employee with this id not found',employeeSearchResult)
         return employeeSearchResult
     }
 
     if(employeeSearchResult.data.position !==null ){
+        logger.warn('the employee already has a position',employeeSearchResult)
         return createDatabaseError.positionAlreadyExists(employeeId);
     }
 
