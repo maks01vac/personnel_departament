@@ -4,32 +4,29 @@ const mapperEmployee = {}
 
 mapperEmployee.restructureEmployeeData = function (employeeData) {
     return employeeData.rows.map((employee) => {
-        if (employee.id_position === null || employee.name_position === null) {
-            return {
-                "id": employee.id,
-                "firstname": employee.firstname,
-                "lastname": employee.lastname,
-                "sex": employee.sex,
-                "birthdate": employee.birthdate,
-                "phone": employee.phone,
-                "position": null
-            }
+
+        const mappingEmployeeData = {
+            "id": employee.id,
+            "firstname": employee.firstname,
+            "lastname": employee.lastname,
+            "sex": employee.sex,
+            "birthdate": employee.birthdate,
+            "phone": employee.phone,
         }
 
-        else {
-            return {
-                "id": employee.id,
-                "firstname": employee.firstname,
-                "lastname": employee.lastname,
-                "sex": employee.sex,
-                "birthdate": employee.birthdate,
-                "phone": employee.phone,
-                "position": {
-                    "id": employee.id_position,
-                    "name": employee.name_position
-                }
-            }
+        if (employee.id_position === null || employee.name_position === null) {
+
+            mappingEmployeeData.position = null
+            return mappingEmployeeData;
+
         }
+
+        mappingEmployeeData.position = {
+            id:employee.id_position,
+            name:employee.name_position
+        }
+
+        return mappingEmployeeData
     })
 }
 

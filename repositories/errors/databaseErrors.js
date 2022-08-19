@@ -15,7 +15,8 @@ createDatabaseError.dbError = (err) => {
 }
 
 createDatabaseError.idNotFound = (id) => {
-    logger.warn(`Entry with id = ${id} not found`);
+
+    logger.warn(`Entry not found, id:`,id);
 
     return {
         success: false,
@@ -29,31 +30,7 @@ createDatabaseError.idNotFound = (id) => {
     }
 }
 
-createDatabaseError.positionAlreadyExists =(id)=>{
-    return {
-        success:false,
-        error:{
-            errorMessage:`The employee with id=${id} already has a position.If you want to change the position of this employee, select the appropriate method`,
-            errorCode:'POSITION_ALREADY_EXISTS',
-            details:{
-                idEmployee:id
-            }
-        }
-    }
-}
 
-createDatabaseError.noPosition =(id)=>{
-    return {
-        success:false,
-        error:{
-            errorMessage:`This employee has no position. Please add a position using the appropriate method`,
-            errorCode:'NO_POSITION',
-            details:{
-                idEmployee:id
-            }
-        }
-    }
-}
 
 createDatabaseError.samePosition =(id)=>{
     return {

@@ -14,6 +14,7 @@ employeesRepository.getAll = async function () {
     const client = await dbPool.connect();
 
     try {
+
         logger.debug('Connection completed')
         logger.debug('Start transaction');
         await client.query('BEGIN;')
@@ -25,6 +26,7 @@ employeesRepository.getAll = async function () {
 
         const employeeDataConversion = mappersEmployee.restructureEmployeeData(requestToGetAllEmployees);
         logger.debug('Transaction was successful');
+
         return {
             success: true,
             data: employeeDataConversion,
@@ -35,7 +37,9 @@ employeesRepository.getAll = async function () {
         return createDatabaseError.dbError(err);
 
     } finally {
-        client.release()
+
+        client.release();
+
     }
 
 }
@@ -43,21 +47,28 @@ employeesRepository.getAll = async function () {
 
 employeesRepository.getById = async function (employeeId) {
 
+    if(!employeeId) throw new Error('One or more parameters undefined');
+
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
+
     try {
 
-        const requestToGetEmployeeById = await client.query(`SELECT e.id,firstname,lastname,sex,birthdate,phone,p.id as id_position,p.name as name_position FROM employees e LEFT JOIN employee_position ep 
-        on e.id=ep.id_employee LEFT JOIN position p on ep.id_position=p.id WHERE e.id=$1`, [employeeId])
+        const requestToGetById = await client.query(`SELECT e.id,firstname,lastname,sex,birthdate,phone,p.id as id_position,p.name as name_position FROM employees e LEFT JOIN employee_position ep 
+        on e.id=ep.id_employee LEFT JOIN position p on ep.id_position=p.id WHERE e.id=$1`, [employeeId]);
 
-        const employeeDataConversion = mappersEmployee.restructureEmployeeData(requestToGetEmployeeById);
+        const employeeDataConversion = mappersEmployee.restructureEmployeeData(requestToGetById);
 
         if (employeeDataConversion.length !== 0) {
+
             return {
                 success: true,
                 data: employeeDataConversion[0]
             }
-        } else return createDatabaseError.idNotFound(employeeId);
+
+        } 
+        
+        return createDatabaseError.idNotFound(employeeId);
 
 
     } catch (err) {
@@ -71,10 +82,14 @@ employeesRepository.getById = async function (employeeId) {
 }
 
 employeesRepository.createNewEmployee = async function (employeeData) {
+
+    if(!employeeData) throw new Error('One or more parameters undefined')
+
     const { firstname, lastname, sex, birthdate, phone } = employeeData
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
+
     try {
         logger.debug('Connection completed')
         logger.debug('Start transaction');
@@ -104,20 +119,11 @@ employeesRepository.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesRepository.assignPositionToEmployee = async function (employeeId, positionData) {
-    const { position } = positionData;
-    console.log(position);
-    const employeeSearchResult = await this.getById(employeeId);
-    console.log(employeeSearchResult.data.position)
-    if (employeeSearchResult.success === false) {
-        logger.warn('employee with this id not found', employeeSearchResult)
-        return employeeSearchResult
-    }
+employeesRepository.assignPosition = async function (employeeId, positionData) {
 
-    if (employeeSearchResult.data.position !== null) {
-        logger.warn('the employee already has a position', employeeSearchResult)
-        return createDatabaseError.positionAlreadyExists(employeeId);
-    }
+    if(!employeeId || !positionData) throw new Error('One or more parameters undefined')
+
+    const { position:positionId } = positionData;
 
     const client = await dbPool.connect();
     try {
@@ -127,7 +133,7 @@ employeesRepository.assignPositionToEmployee = async function (employeeId, posit
         const assignPositionSql = 'INSERT INTO employee_position(id_employee,id_position) VALUES ($1,$2)'
         await client.query('BEGIN;')
 
-        await client.query(assignPositionSql, [employeeId, position]);
+        await client.query(assignPositionSql, [employeeId, positionId]);
 
         await client.query('COMMIT;');
         logger.debug('Transaction was successful');
@@ -147,23 +153,13 @@ employeesRepository.assignPositionToEmployee = async function (employeeId, posit
 }
 
 
-employeesRepository.updatePositionToEmployee = async function (employeeId, positionData) {
-    const { position } = positionData;
+employeesRepository.updatePosition = async function (employeeId, positionData, currentPosition) {
+     
+    if(!employeeId || !positionData || !currentPosition) throw new Error('One or more parameters undefined');
+    
+    const { position:positionId } = positionData;
 
-    const employeeSearchResult = await this.getById(employeeId);
-
-    if (employeeSearchResult.success === false) {
-        logger.warn('employee with this id not found', employeeSearchResult)
-        return employeeSearchResult
-    }
-
-    if (employeeSearchResult.data.position === null) {
-        const errorNoPosition = createDatabaseError.noPosition(employeeId)
-        logger.warn('employee has no position', errorNoPosition)
-        return errorNoPosition;
-    }
-
-    if (employeeSearchResult.data.position.id == position) {
+    if(positionId === currentPosition){
         const errorSamePosition = createDatabaseError.samePosition(employeeId)
         logger.warn('this employee has the same position', errorSamePosition)
         return errorSamePosition;
@@ -177,7 +173,7 @@ employeesRepository.updatePositionToEmployee = async function (employeeId, posit
         const updatePositionSql = 'UPDATE employee_position SET id_position=$1 WHERE id_employee=$2'
         await client.query('BEGIN;')
 
-        await client.query(updatePositionSql, [position, employeeId]);
+        await client.query(updatePositionSql, [positionId, employeeId]);
 
         await client.query('COMMIT;');
         logger.debug('Transaction was successful');
