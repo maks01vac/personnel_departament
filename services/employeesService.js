@@ -56,7 +56,7 @@ employeesService.createNewDepartment = async function (employeeData) {
     }
 }
 
-employeesService.assignPositionToEmployee = async function(employeeId,positionData){
+employeesService.assignOrUpdatePositionToEmployee = async function(employeeId,positionData,updateOrAssignmentMethodRepository){
     try {
         const validatesId = validator.isNumber(Number(employeeId));
         const validatesPositionData = employeeSchemaValidator.positionAssignmentSchema(positionData);
@@ -65,8 +65,6 @@ employeesService.assignPositionToEmployee = async function(employeeId,positionDa
         if (validatesId.error) {
             logger.warn('Id not valid');
             return createServiceErrors.invalidId(validatesId.error);
-            
-
         }else if (validatesPositionData.error){
             logger.warn('Position data not valid');
             return createServiceErrors.invalidData(validatesPositionData.error);
@@ -76,8 +74,7 @@ employeesService.assignPositionToEmployee = async function(employeeId,positionDa
             return positionSearch
 
         }
-
-        const resultAssignPositionToEmployee =employeesRepository.assignPositionToEmployee(employeeId,positionData)
+        const resultAssignPositionToEmployee = await updateOrAssignmentMethodRepository(employeeId,positionData)
         return resultAssignPositionToEmployee
     }
     catch (err) {
@@ -86,33 +83,15 @@ employeesService.assignPositionToEmployee = async function(employeeId,positionDa
     }
 }
 
+employeesService.assignPositionToEmployee = async function(employeeId,positionData){
+
+    return await this.assignOrUpdatePositionToEmployee(employeeId,positionData,employeesRepository.assignPositionToEmployee.bind(this));
+
+}
+
 employeesService.updatePositionToEmployee = async function(employeeId,positionData){
-    try {
-        const validatesId = validator.isNumber(Number(employeeId));
-        const validatesPositionData = employeeSchemaValidator.positionAssignmentSchema(positionData);
-        const positionSearch = await positionRepository.getById(positionData.position);
-    
-        if (validatesId.error) {
-            logger.warn('Id not valid');
-            return createServiceErrors.invalidId(validatesId.error);
 
-        }else if (validatesPositionData.error){
-            logger.warn('Position data not valid');
-            return createServiceErrors.invalidData(validatesPositionData.error);
-
-        } else if(positionSearch.success===false){
-            logger.warn('This position does not exist.')
-            return positionSearch
-
-        }
-
-        const resultUpdatePositionToEmployee =employeesRepository.updatePositionToEmployee(employeeId,positionData)
-        return resultUpdatePositionToEmployee
-    }
-    catch (err) {
-        logger.error("An unexpected error has occurred.Details",err)
-        return createServiceErrors.unexpectedError(err)
-    }
+    return await this.assignOrUpdatePositionToEmployee(employeeId,positionData,employeesRepository.updatePositionToEmployee.bind(this));
 }
 
 employeesService.updateById = async function (id, employeeData) {

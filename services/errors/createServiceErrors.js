@@ -9,7 +9,7 @@ createServiceErrors.invalidId = (validationError)=>{
         success: false,
         error:{
             details:validationError.details[0],
-            errorCode:"INVALID_DATA"
+            errorCode:"INVALID_ID"
         } ,
     }
 }
@@ -20,7 +20,7 @@ createServiceErrors.invalidData = (validationError) =>{
         success: false,
         error:{
             details:validationError.details[0],
-            errorCode:"INVALID_ID"
+            errorCode:"INVALID_DATA"
         } 
     }
 }

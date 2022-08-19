@@ -6,6 +6,7 @@
     "serve": "nodemon ./bin/www",
     "start": "node ./bin/www",
     "debug": "node ./bin/www"
+    
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
