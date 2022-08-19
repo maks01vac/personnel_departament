@@ -160,7 +160,7 @@ employeesRepository.updatePosition = async function (employeeId, positionData, c
     const { position:positionId } = positionData;
 
     if(positionId === currentPosition){
-        const errorSamePosition = createDatabaseError.samePosition(employeeId)
+        const errorSamePosition = createDatabaseError.sameEntry(employeeId)
         logger.warn('this employee has the same position', errorSamePosition)
         return errorSamePosition;
     }

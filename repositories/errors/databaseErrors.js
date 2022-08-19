@@ -32,12 +32,12 @@ createDatabaseError.idNotFound = (id) => {
 
 
 
-createDatabaseError.samePosition =(id)=>{
+createDatabaseError.sameEntry =(id)=>{
     return {
         success:false,
         error:{
-            errorMessage:`This employee already has this position`,
-            errorCode:'SAME_POSITION',
+            errorMessage:`This entry already exists.`,
+            errorCode:'SAME_ENTRY',
             details:{
                 idEmployee:id
             }

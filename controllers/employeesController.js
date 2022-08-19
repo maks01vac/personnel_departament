@@ -55,7 +55,7 @@ employeesController.createNewEmployee = async function (req, res, next) {
   logger.info('Entering employeesController.POST');
   logger.debug('Trying to create new employee with params:', reqBody);
 
-  const resultCreateNewEmployee = await employeesService.createNewDepartment(reqBody);
+  const resultCreateNewEmployee = await employeesService.createNewEmployee(reqBody);
   logger.debug('Trying to create new employee with params.', resultCreateNewEmployee);
 
   if (resultCreateNewEmployee.success) {

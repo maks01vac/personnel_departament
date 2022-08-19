@@ -44,7 +44,7 @@ employeesService.getById = async function (employeeId) {
     }
 }
 
-employeesService.createNewDepartment = async function (employeeData) {
+employeesService.createNewEmployee = async function (employeeData) {
     try {
         const resultValidationData = employeeSchemaValidator.validateSchema(employeeData);
 
