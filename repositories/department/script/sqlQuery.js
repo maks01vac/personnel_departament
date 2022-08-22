@@ -4,6 +4,12 @@ module.exports = {
                 id,name 
              FROM 
                 department`,
+    getByIds: `SELECT 
+                id,name 
+             FROM 
+                department
+             WHERE
+               id IN ($1::int[])`,
 
     getById: `SELECT 
                 id,name 

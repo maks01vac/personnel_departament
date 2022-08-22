@@ -7,9 +7,9 @@ const sqlQuery = require('./script/sqlQuery');
 const createDatabaseError = require('../errors/databaseErrors')
 
 
-departmentRepository.getAll = async function () {
+departmentRepository.getAll = async function (ids) {
     try {
-        return baseRepository.getAll(sqlQuery.getAll)
+        return baseRepository.getAll(sqlQuery.getAll,sqlQuery.getByIds,ids)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)

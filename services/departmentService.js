@@ -7,9 +7,9 @@ const createServiceErrors = require('./errors/createServiceErrors')
 const departmentSchemaValidator = require('../models/department/schemaValidator');
 const { func } = require('joi');
 
-departmentService.getAll = async function () {
+departmentService.getAll = async function (ids) {
     try {
-        const resultGetAllDepartment = await departmentRepository.getAll();
+        const resultGetAllDepartment = await departmentRepository.getAll(ids);
 
         logger.info('The result data is received')
 
@@ -57,14 +57,14 @@ departmentService.createNewDepartment = async function (departmentData) {
 }
 
 
-employeesService.assignEmployees = async function (departmentId, employeesId) {
+departmentService.assignEmployees = async function (departmentId, employeesId) {
 
     try {
         const validatesId = validator.isNumber(Number(departmentId));
 
         if (validatesId.error) {
             return createServiceErrors.invalidId(validatesId.error);
-        }
+        } 
 
         if (Array.isArray(employeesId)) {
 
@@ -77,22 +77,22 @@ employeesService.assignEmployees = async function (departmentId, employeesId) {
                     return createServiceErrors.invalidData(resultValidatesEmployeeId.error);
 
                 }
-
             });
-        }
 
-        else {
-            const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeesId);
-
-            if (resultValidatesEmployeeId.error) {
-
-                return createServiceErrors.invalidData(resultValidatesEmployeeId.error);
-
-            }
         }
 
 
-        const resultGetDepartmentById = await departmentRepository.getById(id);
+        const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeesId);
+
+        if (resultValidatesEmployeeId.error) {
+
+            return createServiceErrors.invalidData(resultValidatesEmployeeId.error);
+
+        }
+
+
+
+        const resultGetDepartmentById = await this.getAll(id);
 
         resultGetDepartmentById.data = resultGetDepartmentById.data[0];
 

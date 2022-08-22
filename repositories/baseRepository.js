@@ -6,15 +6,24 @@ const logger = require('../logger/logger');
 const createDatabaseError = require('./errors/databaseErrors')
 
 
-baseRepository.getAll = async function (sqlQuery) {
+baseRepository.getAll = async function (sqlQuery,sqlQueryByIds,ids) {
 
     logger.debug('Try to connect to database')
     const client = await dbPool.connect();
 
     try {
         logger.debug('Connection completed')
+        let requestToGetAll;
 
-        const requestToGetAll = await client.query(sqlQuery);
+        if(!ids===undefined && !sqlQueryByIds===undefined){
+
+            requestToGetAll = await client.query(sqlQueryByIds,ids);
+
+        }else{
+
+            requestToGetAll = await client.query(sqlQuery);
+
+        }
 
         return {
             success: true,

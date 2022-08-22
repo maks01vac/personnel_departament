@@ -64,7 +64,7 @@ departmentController.createNewDepartment = async function (req, res, next) {
 };
 
 
-employeesController.assignEmployees = async function (req, res, next) {
+departmentController.assignEmployees = async function (req, res, next) {
     const reqBody = req.body;
     const id = req.params.id;
   
