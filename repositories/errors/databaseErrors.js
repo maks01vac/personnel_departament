@@ -15,7 +15,8 @@ createDatabaseError.dbError = (err) => {
 }
 
 createDatabaseError.idNotFound = (id) => {
-    logger.warn(`Entry with id = ${id} not found`);
+
+    logger.warn(`Entry not found, id:`,id);
 
     return {
         success: false,
@@ -24,6 +25,21 @@ createDatabaseError.idNotFound = (id) => {
             errorCode: 'ID_NOT_FOUND',
             details:{
                 entryId:id
+            }
+        }
+    }
+}
+
+
+
+createDatabaseError.sameEntry =(id)=>{
+    return {
+        success:false,
+        error:{
+            errorMessage:`This entry already exists.`,
+            errorCode:'SAME_ENTRY',
+            details:{
+                idEmployee:id
             }
         }
     }

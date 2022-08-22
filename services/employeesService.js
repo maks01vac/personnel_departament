@@ -2,96 +2,169 @@ const employeesService = {};
 
 const validator = require('../validator/validatesInputData');
 const employeesRepository = require('../repositories/employeesRepository');
+const positionRepository = require('../repositories/positionRepository');
 const logger = require('../logger/logger');
 const createServiceErrors = require('./errors/createServiceErrors')
-const employeeSchemaValidator = require('../models/employee/schemaValidator')
+const employeeSchemaValidator = require('../models/employee/schemaValidator');
 
 employeesService.getAll = async function () {
     try {
-        const resultGetAllEmployees = await employeesRepository.getAll();
 
+        const resultGetAll = await employeesRepository.getAll();
         logger.info('The result data is received')
 
-        return resultGetAllEmployees;
+        return resultGetAll;
     }
     catch (err) {
-        return createServiceErrors.unexpectedError(err)
+
+        logger.error("An unexpected error has occurred.Details", err)
+        return createServiceErrors.unexpectedError(err);
+
     }
 
 }
 
-employeesService.getById = async function (id) {
+employeesService.getById = async function (employeeId) {
     try {
-        const validatesId = validator.isNumber(Number(id));
+
+        const validatesId = validator.isNumber(employeeId);
 
         if (validatesId.error) {
             return createServiceErrors.invalidId(validatesId.error);
         }
 
-        const resultGetEmployeeById = await employeesRepository.getById(id);
-        return resultGetEmployeeById;
+        const resultGetById = await employeesRepository.getById(employeeId);
+        return resultGetById;
     }
     catch (err) {
+
+        logger.error("An unexpected error has occurred.Details", err)
         return createServiceErrors.unexpectedError(err)
+
     }
 }
 
-employeesService.createNewDepartment = async function (employeeData) {
+employeesService.createNewEmployee = async function (employeeData) {
     try {
-        const resultValidationEmployeeData = employeeSchemaValidator.validateSchema(employeeData);
+        const resultValidationData = employeeSchemaValidator.validateSchema(employeeData);
 
-        if (resultValidationEmployeeData.error) {
-            return createServiceErrors.invalidData(resultValidationEmployeeData.error);
+        if (resultValidationData.error) {
+            return createServiceErrors.invalidData(resultValidationData.error);
         }
-    
+
         const resultCreateNewEmployee = await employeesRepository.createNewEmployee(employeeData);
         return resultCreateNewEmployee;
     }
     catch (err) {
-        return createServiceErrors.unexpectedError(err)
+
+        logger.error("An unexpected error has occurred.Details", err);
+        return createServiceErrors.unexpectedError(err);
+
     }
 }
 
-employeesService.updateById = async function (id, employeeData) {
-
+employeesService.assignOrUpdatePosition = async function (employeeId, positionData, updateOrAssignmentMethodRepository) {
     try {
-        const validatesId = validator.isNumber(Number(id));
 
-        const resultValidationEmployeeData = employeeSchemaValidator.validateSchema(employeeData);
-    
+        const validatesId = validator.isNumber(employeeId);
+        const validatesPositionData = employeeSchemaValidator.positionAssignmentSchema(positionData);
+
         if (validatesId.error) {
-    
-            return createServiceErrors.invalidId(validatesId.error);
-    
-        } else if (resultValidationEmployeeData.error) {
-            return createServiceErrors.invalidData(resultValidationEmployeeData.error);
+
+            return createServiceErrors.invalidId(validatesId.error.details[0]);
+
         }
-    
-        const resultUpdateEmployeeById = employeesRepository.updateById(id, employeeData)
-    
-        return resultUpdateEmployeeById;
-    
+
+        if (validatesPositionData.error) {
+
+            return createServiceErrors.invalidData(validatesPositionData.error.details[0]);
+
+        }
+
+        const positionSearch = await positionRepository.getById(positionData.position);
+        const employeeSearch = await employeesRepository.getById(employeeId);
+
+        if (positionSearch.success === false) {
+
+            return positionSearch;
+
+        }
+
+        if (employeeSearch.success === false) {
+
+            return employeeSearch
+
+        }
+
+        if (employeeSearch.data.position === null) {
+
+            const resultAssignPosition = await employeesRepository.assignPosition(employeeId, positionData);
+            return resultAssignPosition;
+
+        }
+
+        const currentPosition = employeeSearch.data.position.id;
+        const AssignPositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
+
+        return AssignPositionResult;
+
     }
     catch (err) {
-        return createServiceErrors.unexpectedError(err)
+
+        logger.error("An unexpected error has occurred.Details", err);
+        return createServiceErrors.unexpectedError(err);
+
     }
 }
 
-employeesService.deleteById = async function (id) {
+
+employeesService.updateById = async function (employeeId, employeeData) {
+
     try {
-        const validatesId = validator.isNumber(Number(id));
+        const validatesId = validator.isNumber(employeeId);
+
+        const resultValidationData = employeeSchemaValidator.validateSchema(employeeData);
+
+        if (validatesId.error) {
+
+            return createServiceErrors.invalidId(validatesId.error);
+
+        } else if (resultValidationData.error) {
+            return createServiceErrors.invalidData(resultValidationData.error);
+        }
+
+        const UpdateByIdResult = employeesRepository.updateById(employeeId, employeeData)
+
+        return UpdateByIdResult;
+
+    }
+    catch (err) {
+
+        logger.error("An unexpected error has occurred.Details", err);
+        return createServiceErrors.unexpectedError(err);
+
+    }
+}
+
+employeesService.deleteById = async function (employeeId) {
+    try {
+
+        const validatesId = validator.isNumber(employeeId);
 
         if (validatesId.error) {
             return createServiceErrors.invalidId(validatesId.error);
         }
-    
-    
-        const UpdateEmployeeByIdResult = await employeesRepository.deleteById(id);
-        return UpdateEmployeeByIdResult;
-    
+
+
+        const UpdateByIdResult = await employeesRepository.deleteById(employeeId);
+        return UpdateByIdResult;
+
     }
     catch (err) {
-        return createServiceErrors.unexpectedError(err)
+
+        logger.error("An unexpected error has occurred.Details", err)
+        return createServiceErrors.unexpectedError(err);
+
     }
 
 }

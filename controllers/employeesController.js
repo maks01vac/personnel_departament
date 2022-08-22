@@ -7,97 +7,137 @@ const mappers = require('./errors/mappers')
 
 employeesController.getAll = async function (req, res, next) {
 
-    logger.info('Entering employeesController:GET')
-    logger.debug('Try get all employees');
+  logger.info('Entering employeesController:GET')
+  logger.debug('Try get all employees');
 
-    const resultGetAll = await employeesService.getAll()
+  const resultGetAll = await employeesService.getAll()
 
-    if (!resultGetAll.success) {
-        logger.warn("Entering employeesController.Get: Failure.", resultGetAll);
+  if (!resultGetAll.success) {
 
-        const statusCode = mappers.mapErrorCodeToHttpCode(resultGetAll.error.errorCode);
+    logger.warn("Entering employeesController.Get: Failure.", resultGetAll);
+    const statusCode = mappers.mapErrorCodeToHttpCode(resultGetAll.error.errorCode);
 
-        res.status(statusCode).send(resultGetAll);
+    res.status(statusCode).send(resultGetAll);
 
-    } else {
-        res.send(resultGetAll.data);
-        logger.info('get request went well')
-    }
+    return;
 
+  }
 
+  logger.warn('Entering employeesController.GET:Success',resultGetAll);
+  res.send(resultGetAll);
 };
 
 employeesController.getById = async function (req, res, next) {
-    let id = req.params.id
 
-    const resultGetEmployeeById = await employeesService.getById(id);
-    console.log(resultGetEmployeeById);
-    if (!resultGetEmployeeById.success) {
-        logger.warn('Entering employeesController.GET:Failure');
+  const id = req.params.id
 
-        const statusCode = mappers.mapErrorCodeToHttpCode(resultGetEmployeeById.error.errorCode);
+  const resultGetById = await employeesService.getById(id);
+  console.log(resultGetById);
 
-        res.status(statusCode).send(resultGetEmployeeById);
-    } else res.send(resultGetEmployeeById);
+  if (!resultGetById.success) {
+
+    logger.warn('Entering employeesController.GET:Failure',);
+    const statusCode = mappers.mapErrorCodeToHttpCode(resultGetById.error.errorCode);
+
+    res.status(statusCode).send(resultGetById);
+
+    return;
+  }
+
+  logger.warn('Entering employeesController.GET:Success',resultGetById);
+  res.send(resultGetById);
 
 };
 
 employeesController.createNewEmployee = async function (req, res, next) {
-    const reqBody = req.body;
-    logger.info('Entering employeesController.POST');
-    logger.debug(`Trying to create new employee with params:${reqBody} `);
+  const reqBody = req.body;
 
-    const resultCreateNewEmployee = await employeesService.createNewDepartment(reqBody);
-    logger.debug('Trying to create new employee with params.', resultCreateNewEmployee);
-    if (resultCreateNewEmployee.success) {
-        logger.info('Entering employeesController.POST: Success');
-        res.status(200).send(resultCreateNewEmployee);
-      }
-      else {
-        logger.warn("Entering employeesController.POST: Failure.", resultCreateNewEmployee);
+  logger.info('Entering employeesController.POST');
+  logger.debug('Trying to create new employee with params:', reqBody);
 
-        const statusCode = mappers.mapErrorCodeToHttpCode(resultCreateNewEmployee.error.errorCode);
+  const resultCreateNewEmployee = await employeesService.createNewEmployee(reqBody);
+  logger.debug('Trying to create new employee with params.', resultCreateNewEmployee);
 
-        res.status(statusCode).send(resultCreateNewEmployee);
-      }
+  if (resultCreateNewEmployee.success) {
 
+    logger.info('Entering employeesController.POST: Success',resultCreateNewEmployee);
+    res.status(200).send(resultCreateNewEmployee);
+
+    return;
+  }
+
+  logger.warn("Entering employeesController.POST: Failure.", resultCreateNewEmployee);
+  const statusCode = mappers.mapErrorCodeToHttpCode(resultCreateNewEmployee.error.errorCode);
+
+  res.status(statusCode).send(resultCreateNewEmployee);
 };
 
-employeesController.updateById =async function (req, res, next) {
-    const reqBody = req.body;
-    const id =req.params.id
-    logger.info('Entering employeesController.PUT');
-    logger.debug(`Trying to update employee with params:${reqBody} , ${id} `);
+employeesController.assignPositionToEmployee = async function (req, res, next) {
+  const reqBody = req.body;
+  const id = req.params.id;
 
-    const resultUpdateEmployeeById = await employeesService.updateById(id,reqBody);
-    logger.debug('Trying to update employee with params.', resultUpdateEmployeeById);
-    if (resultUpdateEmployeeById.success) {
-        logger.info('Entering employeesController.PUT: Success');
-        res.status(200).send(resultUpdateEmployeeById);
-      }
-      else {
-        logger.warn("Entering employeesController.PUT: Failure.", resultUpdateEmployeeById);
+  logger.info('Entering employeesController.POST');
+  logger.debug('trying to assign a position to an employee with params', reqBody, id);
 
-        const statusCode = mappers.mapErrorCodeToHttpCode(resultUpdateEmployeeById.error.errorCode);
+  const resultAssignPosition = await employeesService.assignOrUpdatePosition(id, reqBody);
 
-        res.status(statusCode).send(resultUpdateEmployeeById);
-      }
+
+  if (resultAssignPosition.success) {
+
+    logger.info('Entering employeesController.POST: Success',resultAssignPosition);
+    res.status(200).send(resultAssignPosition);
+
+    return;
+  }
+
+  logger.warn("Entering employeesController.POST: Failure.", resultAssignPosition);
+  const statusCode = mappers.mapErrorCodeToHttpCode(resultAssignPosition.error.errorCode);
+
+  res.status(statusCode).send(resultAssignPosition);
 };
 
-employeesController.deleteById =async function (req, res, next) {
-    let id = req.params.id
 
-    const resultDeleteEmployeeById = await employeesService.deleteById(id);
-    if (!resultDeleteEmployeeById.success) {
-        logger.warn('Entering employeesController.DELETE:Failure');
+employeesController.updateById = async function (req, res, next) {
+  const reqBody = req.body;
+  const id = req.params.id;
 
-        const statusCode = mappers.mapErrorCodeToHttpCode(resultDeleteEmployeeById.error.errorCode);
+  logger.info('Entering employeesController.PUT');
+  logger.debug('Trying to update employee with params:', reqBody, id);
 
-        res.status(statusCode).send(resultDeleteEmployeeById);
-    } else {
-        logger.info('Entering employeesController.DELETE: Success');
-        res.send(resultDeleteEmployeeById);
-    }
+  const resultUpdateById = await employeesService.updateById(id, reqBody);
+  logger.debug('Trying to update employee with params.', resultUpdateById);
+
+  if (resultUpdateById.success) {
+
+    logger.info('Entering employeesController.PUT: Success',resultUpdateById);
+    res.status(200).send(resultUpdateById);
+
+    return;
+  }
+
+  logger.warn("Entering employeesController.PUT: Failure.", resultUpdateById);
+  const statusCode = mappers.mapErrorCodeToHttpCode(resultUpdateById.error.errorCode);
+
+  res.status(statusCode).send(resultUpdateById);
+};
+
+employeesController.deleteById = async function (req, res, next) {
+  let id = req.params.id
+
+  const resultDeleteById = await employeesService.deleteById(id);
+
+  if (!resultDeleteById.success) {
+
+    logger.warn('Entering employeesController.DELETE:Failure',resultDeleteById);
+    const statusCode = mappers.mapErrorCodeToHttpCode(resultDeleteById.error.errorCode);
+
+    res.status(statusCode).send(resultDeleteById);
+
+    return;
+  }
+
+  logger.info('Entering employeesController.DELETE: Success');
+  res.send(resultDeleteById);
 
 };
 
