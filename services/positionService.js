@@ -29,6 +29,9 @@ positionService.getById = async function (id) {
         }
     
         const resultGetPositionById = await positionRepository.getById(id);
+
+        resultGetPositionById.data = resultGetPositionById.data[0];
+
         return resultGetPositionById;
     }
     catch (err) {

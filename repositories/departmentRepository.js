@@ -1,163 +1,87 @@
 const departmentRepository = {};
 
-const dbPool = require('../dbPool/dbPool')
 const logger = require('../logger/logger');
+const baseRepository = require('./baseRepository');
 
 const createDatabaseError = require('./errors/databaseErrors')
 
 
 departmentRepository.getAll = async function () {
-
-    logger.debug('Try to connect to database')
-    const client = await dbPool.connect();
-
     try {
-        logger.debug('Connection completed')
-
-        const requestToGetAllDepartment = await client.query('SELECT id,name FROM department');
-
-        return {
-            success: true,
-            data: requestToGetAllDepartment.rows
-        }
-
-    } catch (err) {
-
-        return createDatabaseError.dbError(err);
-
-    } finally {
-        client.release()
+        return baseRepository.getAll('SELECT id,name FROM department')
     }
-
+    catch (err) {
+        return createDatabaseError.dbConnectionError(err)
+    }
 }
-
 
 
 departmentRepository.getById = async function (departmentId) {
 
-    logger.debug('Try to connect to database');
-    const client = await dbPool.connect();
+    if (!departmentId) throw new Error('One or more parameters undefined');
+
     try {
-
-        const requestToGetDepartmentById = await client.query('SELECT id,name FROM department WHERE id=$1', [departmentId])
-
-        if (requestToGetDepartmentById.rows.length !== 0) {
-            return {
-                success: true,
-                data: requestToGetDepartmentById.rows[0]
-            }
-        } else return createDatabaseError.idNotFound(departmentId);
-
-
-    } catch (err) {
-
-        createDatabaseError.dbError(err);
-
-    } finally {
-        client.release()
+        return baseRepository.getById(departmentId, 'SELECT id,name FROM department WHERE id=$1')
     }
-
+    catch (err) {
+        return createDatabaseError.dbConnectionError(err)
+    }
 }
 
 departmentRepository.createNewDepartment = async function (departmentData) {
-    const { name } = departmentData
 
-    logger.debug('Try to connect to database');
-    const client = await dbPool.connect();
+    if (!departmentData) throw new Error('One or more parameters undefined');
+
+    const { name } = departmentData;
+
     try {
-        logger.debug('Connection completed')
-        logger.debug('Start transaction');
-        const newDepartmentSql = 'INSERT INTO department(name) VALUES($1);'
-        await client.query('BEGIN;')
-
-        const queryToCreateNewDepartment = await client.query(newDepartmentSql, [name]);
-
-        await client.query('COMMIT;');
-        logger.debug('Transaction was successful');
-
-        return {
-            success: true,
-            data: {
-                idNewDepartment: queryToCreateNewDepartment.rows[0]
-            }
-        }
-
-    } catch (err) {
-
-        await client.query('ROLLBACK')
-        return createDatabaseError.dbError(err);
-
-    } finally {
-        client.release()
+        return baseRepository.createNewEntry([name], 'INSERT INTO department(name) VALUES($1);')
+    }
+    catch (err) {
+        return createDatabaseError.dbConnectionError(err)
     }
 }
 
 departmentRepository.updateById = async function (departmentId, departmentData) {
 
+    if (!departmentId || !departmentData) throw new Error('One or more parameters undefined');
+
     const { name } = departmentData
 
-    const departmentSearchResult = await this.getById(departmentId);
-
-    if (departmentSearchResult.success === false) {
-        return departmentSearchResult
-    }
-
-    logger.debug('Try to connect to database');
-    const client = await dbPool.connect();
-
     try {
-        logger.debug('Connection completed')
-        logger.debug('Start transaction');
 
-        await client.query('BEGIN;')
-        const updateDepartmentSql = 'UPDATE department SET name=$1 WHERE id=$2'
-        await client.query(updateDepartmentSql, [name, departmentId])
-        await client.query('COMMIT;');
+        const searchResult = await this.getById(departmentId);
 
-        logger.debug('Transaction was successful');
-        return {
-            success: true,
+        if (searchResult.success === false) {
+            return searchResult
         }
-    } catch (err) {
-        await client.query('ROLLBACK')
 
-        return createDatabaseError.dbError(err);
+        return baseRepository.updateById([name, departmentId], 'UPDATE department SET name=$1 WHERE id=$2');
 
-    } finally {
-        client.release()
+    }
+    catch (err) {
+        return createDatabaseError.dbConnectionError(err)
     }
 }
 
 departmentRepository.deleteById = async function (departmentId) {
-    const departmentSearchResult = await this.getById(departmentId);
 
-    if (departmentSearchResult.success === false) {
-        return departmentSearchResult
-    }
-
-    logger.debug('Try to connect to database');
-    const client = await dbPool.connect();
+    if (!departmentId) throw new Error('One or more parameters undefined');
 
     try {
-        logger.debug('Connection completed')
-        logger.debug('Start transaction');
 
-        await client.query('BEGIN;')
-        await client.query('DELETE FROM department WHERE id=$1', [departmentId])
-        await client.query('COMMIT;');
-        logger.debug('Transaction was successful');
+        const searchResult = await this.getById(departmentId);
 
-        return { success: true }
+        if (searchResult.success === false) {
+            return searchResult
+        }
 
-    } catch (err) {
+        return baseRepository.deleteById(departmentId, 'DELETE FROM department WHERE id=$1');
 
-        await client.query('ROLLBACK;');
-        return createDatabaseError.dbError(err);
-
-    } finally {
-        client.release()
     }
-
+    catch (err) {
+        return createDatabaseError.dbConnectionError(err)
+    }
 }
 
 
