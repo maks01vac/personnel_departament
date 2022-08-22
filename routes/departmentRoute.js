@@ -12,6 +12,8 @@ departmentRouter.get('/department/:id',departmentController.getById);
 
 departmentRouter.post('/department',departmentController.createNewDepartment);
 
+departmentRouter.post('/department:id/assign_employees',departmentController.assign_employees);
+
 departmentRouter.put('/department/:id',departmentController.updateById);
   
 departmentRouter.delete('/department/:id',departmentController.deleteById);

@@ -63,6 +63,31 @@ departmentController.createNewDepartment = async function (req, res, next) {
 
 };
 
+
+employeesController.assignEmployees = async function (req, res, next) {
+    const reqBody = req.body;
+    const id = req.params.id;
+  
+    logger.info('Entering departmentController.POST');
+    logger.debug('trying to assign employee to the department with params', reqBody, id);
+  
+    const resultAssignEmployee = await employeesService.assignEmployees(id, reqBody);
+  
+  
+    if (resultAssignEmployee.success) {
+  
+      logger.info('Entering departmentController.POST: Success',resultAssignEmployee);
+      res.status(200).send(resultAssignEmployee);
+  
+      return;
+    }
+  
+    logger.warn("Entering departmentController.POST: Failure.", resultAssignEmployee);
+    const statusCode = mappers.mapErrorCodeToHttpCode(resultAssignEmployee.error.errorCode);
+  
+    res.status(statusCode).send(resultAssignEmployee);
+  };
+
 departmentController.updateById =async function (req, res, next) {
     const reqBody = req.body;
     const id =req.params.id

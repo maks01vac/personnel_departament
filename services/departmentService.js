@@ -4,14 +4,15 @@ const validator = require('../validator/validatesInputData');
 const departmentRepository = require('../repositories/department/departmentRepository');
 const logger = require('../logger/logger');
 const createServiceErrors = require('./errors/createServiceErrors')
-const departmentSchemaValidator = require('../models/department/schemaValidator')
+const departmentSchemaValidator = require('../models/department/schemaValidator');
+const { func } = require('joi');
 
 departmentService.getAll = async function () {
     try {
         const resultGetAllDepartment = await departmentRepository.getAll();
 
         logger.info('The result data is received')
-    
+
         return resultGetAllDepartment;
     }
     catch (err) {
@@ -19,18 +20,18 @@ departmentService.getAll = async function () {
     }
 }
 
-departmentService.getById = async function (id) {
+departmentService.getById = async function (departmentId) {
 
     try {
-        const validatesId = validator.isNumber(Number(id));
+        const validatesId = validator.isNumber(Number(departmentId));
 
         if (validatesId.error) {
             return createServiceErrors.invalidId(validatesId.error);
         }
-    
-        const resultGetDepartmentById = await departmentRepository.getById(id);
 
-        resultGetDepartmentById.data=resultGetDepartmentById.data[0];
+        const resultGetDepartmentById = await departmentRepository.getById(departmentId);
+
+        resultGetDepartmentById.data = resultGetDepartmentById.data[0];
 
         return resultGetDepartmentById;
     }
@@ -46,7 +47,7 @@ departmentService.createNewDepartment = async function (departmentData) {
         if (resultValidationDepartmentData.error) {
             return createServiceErrors.invalidData(resultValidationDepartmentData.error);
         }
-    
+
         const resultCreateNewDepartment = await departmentRepository.createNewDepartment(departmentData);
         return resultCreateNewDepartment;
     }
@@ -54,6 +55,55 @@ departmentService.createNewDepartment = async function (departmentData) {
         return createServiceErrors.unexpectedError(err);
     }
 }
+
+
+employeesService.assignEmployees = async function (departmentId, employeesId) {
+
+    try {
+        const validatesId = validator.isNumber(Number(departmentId));
+
+        if (validatesId.error) {
+            return createServiceErrors.invalidId(validatesId.error);
+        }
+
+        if (Array.isArray(employeesId)) {
+
+            employeesId.forEach(employeeId => {
+
+                const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeeId);
+
+                if (resultValidatesEmployeeId.error) {
+
+                    return createServiceErrors.invalidData(resultValidatesEmployeeId.error);
+
+                }
+
+            });
+        }
+
+        else {
+            const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeesId);
+
+            if (resultValidatesEmployeeId.error) {
+
+                return createServiceErrors.invalidData(resultValidatesEmployeeId.error);
+
+            }
+        }
+
+
+        const resultGetDepartmentById = await departmentRepository.getById(id);
+
+        resultGetDepartmentById.data = resultGetDepartmentById.data[0];
+
+        return resultGetDepartmentById;
+    }
+    catch (err) {
+        return createServiceErrors.unexpectedError(err)
+    }
+
+}
+
 
 departmentService.updateById = async function (departmentId, departmentData) {
     try {
@@ -70,10 +120,10 @@ departmentService.updateById = async function (departmentId, departmentData) {
 
         }
         const resultUpdateDepartmentById = departmentRepository.updateById(departmentId, departmentData);
-        
+
         return resultUpdateDepartmentById;
     }
-    catch(err) {
+    catch (err) {
         return createServiceErrors.unexpectedError(err)
     }
 
@@ -87,12 +137,12 @@ departmentService.deleteById = async function (departmentId) {
         if (validatesId.error) {
             return createServiceErrors.invalidId(validatesId.error);
         }
-    
-    
+
+
         const UpdateDepartmentByIdResult = await departmentRepository.deleteById(departmentId);
         return UpdateDepartmentByIdResult;
     }
-    catch(err) {
+    catch (err) {
         return createServiceErrors.unexpectedError(err)
     }
 }
