@@ -11,6 +11,8 @@ const logger = require('../logger/logger');
 
 const createServiceErrors = require('./errors/createServiceErrors');
 const positionService = require('./positionService');
+const departmentService = require('./departmentService');
+
 
 
 
@@ -117,15 +119,57 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
 
         if (employeeSearch.data.position === null) {
 
-            const resultAssignPosition = await employeesRepository.assignPosition(employeeId, positionData);
+            const resultAssignPosition = await employeesRepository.assignDepartment(employeeId, positionData);
             return resultAssignPosition;
 
         }
 
         const currentPosition = employeeSearch.data.position.id;
-        const assignPositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
+        const updatePositionResult = await employeesRepository.updateDepartment(employeeId, positionData, currentPosition)
 
-        return assignPositionResult;
+        return updatePositionResult;
+
+    }
+    catch (err) {
+
+        logger.error("An unexpected error has occurred.Details", err);
+        return createServiceErrors.unexpectedError(err);
+
+    }
+}
+
+employeesService.assignOrUpdateDepartment = async function (employeeId, departmentData) {
+    try {
+
+        const validatesId = validator.isNumber(employeeId);
+        const validatesDepartmentData = employeeSchemaValidator.departmentAssignmentSchema(departmentData);
+
+        if (validatesId.error) {
+
+            return createServiceErrors.invalidId(validatesId.error.details[0]);
+
+        }
+
+        if (validatesDepartmentData.error) {
+
+            return createServiceErrors.invalidData(validatesDepartmentData.error.details[0]);
+
+        }
+
+
+        
+
+        if (employeeSearch.data.department === null) {
+
+            const resultAssignDepartment = await employeesRepository.assignDepartment(employeeId, departmentData);
+            return resultAssignDepartment;
+
+        }
+
+        const currentDepartment = employeeSearch.data.department.id;
+        const updateDepartmentResult = await employeesRepository.updateDepartment(employeeId, departmentData, currentDepartment)
+
+        return updateDepartmentResult;
 
     }
     catch (err) {

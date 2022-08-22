@@ -19,4 +19,11 @@ employeeSchemaValidator.positionAssignmentSchema =(data) =>{
     })
     return schema.validate(data);
 }
+
+employeeSchemaValidator.departmentAssignmentSchema =(data) =>{
+    const schema = joi.object({
+        department:joi.number().integer().required()
+    })
+    return schema.validate(data);
+}
 module.exports = employeeSchemaValidator

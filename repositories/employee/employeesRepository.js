@@ -54,7 +54,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesRepository.assignPosition = async function (employeeId, positionData) {
+employeesRepository.assignDepartment = async function (employeeId, positionData) {
 
     if (!employeeId || !positionData) throw new Error('One or more parameters undefined')
 
@@ -74,7 +74,7 @@ employeesRepository.assignPosition = async function (employeeId, positionData) {
 }
 
 
-employeesRepository.updatePosition = async function (employeeId, positionData, currentPosition) {
+employeesRepository.updateDepartment = async function (employeeId, positionData, currentPosition) {
 
     if (!employeeId || !positionData || !currentPosition) throw new Error('One or more parameters undefined');
 
@@ -89,6 +89,48 @@ employeesRepository.updatePosition = async function (employeeId, positionData, c
     try {
 
         return baseRepository.updateById([positionId, employeeId], sqlQuery.updatePosition);
+
+    }
+    catch (err) {
+        return createDatabaseError.dbConnectionError(err)
+    }
+}
+
+
+employeesRepository.assignDepartment = async function (employeeId, departmentData) {
+
+    if (!employeeId || !departmentData) throw new Error('One or more parameters undefined')
+
+    const { department: departmentId } = departmentData;
+
+    try {
+
+        return await baseRepository.createNewEntry([employeeId, departmentId], sqlQuery.assignDepartment);
+            
+    }
+    catch (err) {
+        return createDatabaseError.dbConnectionError(err);
+    }
+}
+
+
+employeesRepository.updateDepartment = async function (employeeId, departmentData, currentDepartment) {
+
+    if (!employeeId || !departmentData || !currentDepartment) throw new Error('One or more parameters undefined');
+
+    const { position: positionId } = departmentData;
+
+    if (positionId === currentDepartment) {
+
+        const errorSameDepartment = createDatabaseError.sameEntry(employeeId)
+
+        logger.warn('this employee has the same department', errorSameDepartment)
+        return errorSameDepartment;
+    }
+
+    try {
+
+        return baseRepository.updateById([positionId, employeeId], sqlQuery.updateDepartment);
 
     }
     catch (err) {
