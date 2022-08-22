@@ -1,16 +1,26 @@
 const employeesService = {};
 
 const validator = require('../validator/validatesInputData');
-const employeesRepository = require('../repositories/employeesRepository');
-const positionRepository = require('../repositories/positionRepository');
-const logger = require('../logger/logger');
-const createServiceErrors = require('./errors/createServiceErrors')
 const employeeSchemaValidator = require('../models/employee/schemaValidator');
+const mappersEmployee = require('../models/employee/mapperEmployee');
+
+const employeesRepository = require('../repositories/employeesRepository');
+
+const logger = require('../logger/logger');
+
+const createServiceErrors = require('./errors/createServiceErrors');
+const positionService = require('./positionService');
+
+
 
 employeesService.getAll = async function () {
     try {
 
         const resultGetAll = await employeesRepository.getAll();
+
+        const mappingData = mappersEmployee.restructureEmployeeData(resultGetAll.data);
+
+        resultGetAll.data = mappingData;
         logger.info('The result data is received')
 
         return resultGetAll;
@@ -34,7 +44,15 @@ employeesService.getById = async function (employeeId) {
         }
 
         const resultGetById = await employeesRepository.getById(employeeId);
-        return resultGetById;
+        if(resultGetById.success){
+
+            const mappingData = mappersEmployee.restructureEmployeeData(resultGetById.data);
+            resultGetById.data = mappingData[0];
+
+        }
+        
+
+        return await resultGetById;
     }
     catch (err) {
 
@@ -63,7 +81,7 @@ employeesService.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesService.assignOrUpdatePosition = async function (employeeId, positionData, updateOrAssignmentMethodRepository) {
+employeesService.assignOrUpdatePosition = async function (employeeId, positionData) {
     try {
 
         const validatesId = validator.isNumber(employeeId);
@@ -81,8 +99,8 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
 
         }
 
-        const positionSearch = await positionRepository.getById(positionData.position);
-        const employeeSearch = await employeesRepository.getById(employeeId);
+        const positionSearch = await positionService.getById(positionData.position);
+        const employeeSearch = await employeesService.getById(employeeId);
 
         if (positionSearch.success === false) {
 
@@ -104,9 +122,9 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
         }
 
         const currentPosition = employeeSearch.data.position.id;
-        const AssignPositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
+        const assignPositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
 
-        return AssignPositionResult;
+        return assignPositionResult;
 
     }
     catch (err) {

@@ -3,7 +3,7 @@ const { array } = require("joi")
 const mapperEmployee = {}
 
 mapperEmployee.restructureEmployeeData = function (employeeData) {
-    return employeeData.rows.map((employee) => {
+    return employeeData.map((employee) => {
 
         const mappingEmployeeData = {
             "id": employee.id,
