@@ -1,7 +1,7 @@
 const positionService = {};
 
 const validator = require('../validator/validatesInputData');
-const positionRepository = require('../repositories/positionRepository');
+const positionRepository = require('../repositories/position/positionRepository');
 const logger = require('../logger/logger');
 const createServiceErrors = require('./errors/createServiceErrors')
 const positionSchemaValidator = require('../models/position/schemaValidator')
@@ -29,6 +29,9 @@ positionService.getById = async function (id) {
         }
     
         const resultGetPositionById = await positionRepository.getById(id);
+
+        resultGetPositionById.data = resultGetPositionById.data[0];
+
         return resultGetPositionById;
     }
     catch (err) {

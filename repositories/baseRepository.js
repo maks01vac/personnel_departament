@@ -1,4 +1,4 @@
-const positionRepository = {};
+const baseRepository = {};
 
 const dbPool = require('../dbPool/dbPool')
 const logger = require('../logger/logger');
@@ -6,7 +6,7 @@ const logger = require('../logger/logger');
 const createDatabaseError = require('./errors/databaseErrors')
 
 
-positionRepository.getAll = async function () {
+baseRepository.getAll = async function (sqlQuery) {
 
     logger.debug('Try to connect to database')
     const client = await dbPool.connect();
@@ -14,11 +14,11 @@ positionRepository.getAll = async function () {
     try {
         logger.debug('Connection completed')
 
-        const requestToGetAllPosition = await client.query('SELECT id,name FROM position');
+        const requestToGetAll = await client.query(sqlQuery);
 
         return {
             success: true,
-            data: requestToGetAllPosition.rows
+            data: requestToGetAll.rows
         }
 
     } catch (err) {
@@ -33,20 +33,20 @@ positionRepository.getAll = async function () {
 
 
 
-positionRepository.getById = async function (positionId) {
+baseRepository.getById = async function (id,sqlQuery) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
     try {
 
-        const requestToGetPositionById = await client.query('SELECT id,name FROM position WHERE id=$1', [positionId])
+        const requestToGetById = await client.query(sqlQuery, [id])
 
-        if (requestToGetPositionById.rows.length !== 0) {
+        if (requestToGetById.rows.length !== 0) {
             return {
                 success: true,
-                data: requestToGetPositionById.rows[0]
+                data: requestToGetById.rows
             }
-        } else return createDatabaseError.idNotFound(positionId);
+        } else return createDatabaseError.idNotFound(id);
 
 
     } catch (err) {
@@ -59,18 +59,17 @@ positionRepository.getById = async function (positionId) {
 
 }
 
-positionRepository.createNewPosition = async function (positionData) {
-    const { name } = positionData
+baseRepository.createNewEntry = async function (data,sqlQuery) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
     try {
         logger.debug('Connection completed')
         logger.debug('Start transaction');
-        const newPositionSql = 'INSERT INTO position(name) VALUES($1);'
-        await client.query('BEGIN;')
+        const newEntrySql = sqlQuery;
+        await client.query('BEGIN;');
 
-        const queryToCreateNewPosition = await client.query(newPositionSql, [name]);
+        const queryToCreateNewEntry = await client.query(newEntrySql, data);
 
         await client.query('COMMIT;');
         logger.debug('Transaction was successful');
@@ -78,7 +77,7 @@ positionRepository.createNewPosition = async function (positionData) {
         return {
             success: true,
             data: {
-                idNewPosition: queryToCreateNewPosition.rows[0]
+                idNewEntry: queryToCreateNewEntry.rows[0]
             }
         }
 
@@ -92,15 +91,7 @@ positionRepository.createNewPosition = async function (positionData) {
     }
 }
 
-positionRepository.updateById = async function (positionId, positionData) {
-
-    const { name } = positionData
-
-    const positionSearchResult = await this.getById(positionId);
-
-    if (positionSearchResult.success === false) {
-        return positionSearchResult
-    }
+baseRepository.updateById = async function (data,sqlQuery) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
@@ -110,8 +101,8 @@ positionRepository.updateById = async function (positionId, positionData) {
         logger.debug('Start transaction');
 
         await client.query('BEGIN;')
-        const updatePositionSql = 'UPDATE position SET name=$1 WHERE id=$2'
-        await client.query(updatePositionSql, [name, positionId])
+        const updateSql = sqlQuery;
+        await client.query(updateSql, data)
         await client.query('COMMIT;');
 
         logger.debug('Transaction was successful');
@@ -128,12 +119,7 @@ positionRepository.updateById = async function (positionId, positionData) {
     }
 }
 
-positionRepository.deleteById = async function (positionId) {
-    const positionSearchResult = await this.getById(positionId);
-
-    if (positionSearchResult.success === false) {
-        return positionSearchResult
-    }
+baseRepository.deleteById = async function (id,sqlQuery) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
@@ -143,7 +129,9 @@ positionRepository.deleteById = async function (positionId) {
         logger.debug('Start transaction');
 
         await client.query('BEGIN;')
-        await client.query('DELETE FROM position WHERE id=$1', [positionId])
+
+        await client.query(sqlQuery, [id])
+
         await client.query('COMMIT;');
         logger.debug('Transaction was successful');
 
@@ -157,8 +145,6 @@ positionRepository.deleteById = async function (positionId) {
     } finally {
         client.release()
     }
-
 }
 
-
-module.exports = positionRepository;
+module.exports = baseRepository;

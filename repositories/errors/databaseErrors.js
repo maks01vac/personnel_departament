@@ -45,4 +45,18 @@ createDatabaseError.sameEntry =(id)=>{
     }
 }
 
+createDatabaseError.dbConnectionError =(err)=>{
+    logger.error('Database connection problems.Details:',err);
+    return{
+        success:false,
+        error:{
+            errorMessage:`Sorry, there was a problem connecting to the database`,
+            errorCode:'CONNECTION_ERROR',
+            details:{
+                dbErrorCode:err.code
+            }
+        }
+    }
+}
+
 module.exports = createDatabaseError

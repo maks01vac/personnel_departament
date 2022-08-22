@@ -1,7 +1,7 @@
 const departmentService = {};
 
 const validator = require('../validator/validatesInputData');
-const departmentRepository = require('../repositories/departmentRepository');
+const departmentRepository = require('../repositories/department/departmentRepository');
 const logger = require('../logger/logger');
 const createServiceErrors = require('./errors/createServiceErrors')
 const departmentSchemaValidator = require('../models/department/schemaValidator')
@@ -29,6 +29,9 @@ departmentService.getById = async function (id) {
         }
     
         const resultGetDepartmentById = await departmentRepository.getById(id);
+
+        resultGetDepartmentById.data=resultGetDepartmentById.data[0];
+
         return resultGetDepartmentById;
     }
     catch (err) {
@@ -66,7 +69,8 @@ departmentService.updateById = async function (departmentId, departmentData) {
             return createServiceErrors.invalidData(resultValidationDepartmentData.error);
 
         }
-        const resultUpdateDepartmentById = departmentRepository.updateById(departmentId, departmentData)
+        const resultUpdateDepartmentById = departmentRepository.updateById(departmentId, departmentData);
+        
         return resultUpdateDepartmentById;
     }
     catch(err) {
