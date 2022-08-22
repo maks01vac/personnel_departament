@@ -4,6 +4,7 @@ const dbPool = require('../dbPool/dbPool')
 const logger = require('../logger/logger');
 
 const baseRepository = require('./baseRepository');
+const sqlQuery = require('./const/sqlQuery');
 
 const createDatabaseError = require('./errors/databaseErrors')
 
@@ -11,7 +12,7 @@ const createDatabaseError = require('./errors/databaseErrors')
 positionRepository.getAll = async function () {
     try {
 
-        return baseRepository.getAll('SELECT id,name FROM position');
+        return baseRepository.getAll(sqlQuery.position.getAll);
 
     }
     catch (err) {
@@ -29,7 +30,7 @@ positionRepository.getById = async function (positionId) {
 
     try {
         
-        return baseRepository.getById(positionId, 'SELECT id,name FROM position WHERE id=$1');
+        return baseRepository.getById(positionId, sqlQuery.position.getById);
 
     }
     catch (err) {
@@ -48,7 +49,7 @@ positionRepository.createNewPosition = async function (positionData) {
 
     try {
 
-        return baseRepository.createNewEntry([name], 'INSERT INTO position(name) VALUES($1);');
+        return baseRepository.createNewEntry([name], sqlQuery.position.createNewEntry);
 
     }
     catch (err) {
@@ -72,7 +73,7 @@ positionRepository.updateById = async function (positionId, positionData) {
             return searchResult;
         }
 
-        return baseRepository.updateById([name, positionId], 'UPDATE position SET name=$1 WHERE id=$2');
+        return baseRepository.updateById([name, positionId], sqlQuery.position.updateById);
 
     }
     catch (err) {
@@ -91,7 +92,7 @@ positionRepository.deleteById = async function (positionId) {
             return searchResult
         }
 
-        return baseRepository.deleteById(positionId, 'DELETE FROM position WHERE id=$1');
+        return baseRepository.deleteById(positionId, sqlQuery.position.deleteById);
 
     }
     catch (err) {

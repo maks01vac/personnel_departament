@@ -2,13 +2,14 @@ const departmentRepository = {};
 
 const logger = require('../logger/logger');
 const baseRepository = require('./baseRepository');
+const sqlQuery = require('./const/sqlQuery');
 
 const createDatabaseError = require('./errors/databaseErrors')
 
 
 departmentRepository.getAll = async function () {
     try {
-        return baseRepository.getAll('SELECT id,name FROM department')
+        return baseRepository.getAll(sqlQuery.department.getAll)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -21,7 +22,7 @@ departmentRepository.getById = async function (departmentId) {
     if (!departmentId) throw new Error('One or more parameters undefined');
 
     try {
-        return baseRepository.getById(departmentId, 'SELECT id,name FROM department WHERE id=$1')
+        return baseRepository.getById(departmentId, sqlQuery.department.getById)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -35,7 +36,7 @@ departmentRepository.createNewDepartment = async function (departmentData) {
     const { name } = departmentData;
 
     try {
-        return baseRepository.createNewEntry([name], 'INSERT INTO department(name) VALUES($1);')
+        return baseRepository.createNewEntry([name], sqlQuery.department.createNewEntry)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -56,7 +57,7 @@ departmentRepository.updateById = async function (departmentId, departmentData) 
             return searchResult
         }
 
-        return baseRepository.updateById([name, departmentId], 'UPDATE department SET name=$1 WHERE id=$2');
+        return baseRepository.updateById([name, departmentId], sqlQuery.department.updateById);
 
     }
     catch (err) {
@@ -76,7 +77,7 @@ departmentRepository.deleteById = async function (departmentId) {
             return searchResult
         }
 
-        return baseRepository.deleteById(departmentId, 'DELETE FROM department WHERE id=$1');
+        return baseRepository.deleteById(departmentId, sqlQuery.department.deleteById);
 
     }
     catch (err) {

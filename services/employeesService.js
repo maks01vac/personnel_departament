@@ -1,12 +1,17 @@
 const employeesService = {};
 
 const validator = require('../validator/validatesInputData');
-const employeesRepository = require('../repositories/employeesRepository');
-const positionRepository = require('../repositories/positionRepository');
-const logger = require('../logger/logger');
-const createServiceErrors = require('./errors/createServiceErrors')
 const employeeSchemaValidator = require('../models/employee/schemaValidator');
 const mappersEmployee = require('../models/employee/mapperEmployee');
+
+const employeesRepository = require('../repositories/employeesRepository');
+
+const logger = require('../logger/logger');
+
+const createServiceErrors = require('./errors/createServiceErrors');
+const positionService = require('./positionService');
+
+
 
 employeesService.getAll = async function () {
     try {
@@ -94,7 +99,7 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
 
         }
 
-        const positionSearch = await positionRepository.getById(positionData.position);
+        const positionSearch = await positionService.getById(positionData.position);
         const employeeSearch = await employeesService.getById(employeeId);
 
         if (positionSearch.success === false) {

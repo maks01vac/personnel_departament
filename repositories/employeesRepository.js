@@ -4,26 +4,13 @@ const dbPool = require('../dbPool/dbPool');
 const logger = require('../logger/logger');
 const mappersEmployee = require('../models/employee/mapperEmployee');
 const baseRepository = require('./baseRepository');
+const sqlQuery = require('./const/sqlQuery');
 
 const createDatabaseError = require('./errors/databaseErrors')
 
 employeesRepository.getAll = async function () {
     try {
-        return baseRepository.getAll(`SELECT 
-            e.id,
-            firstname,
-            lastname,
-            sex,
-            birthdate,
-            phone,
-            p.id as id_position,
-            p.name as name_position 
-        FROM 
-            employees e 
-        LEFT JOIN 
-            employee_position ep on e.id=ep.id_employee 
-        LEFT JOIN 
-            position p on ep.id_position=p.id`)
+        return baseRepository.getAll(sqlQuery.employee.getAll)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -38,24 +25,7 @@ employeesRepository.getById = async function (employeeId) {
 
     try {
 
-        return await baseRepository.getById(employeeId,  
-        `SELECT 
-            e.id,
-            firstname,
-            lastname,
-            sex,
-            birthdate,
-            phone,
-            p.id as id_position,
-            p.name as name_position 
-        FROM 
-            employees e 
-        LEFT JOIN 
-            employee_position ep on e.id=ep.id_employee 
-        LEFT JOIN 
-            position p on ep.id_position=p.id 
-        WHERE 
-            e.id=$1`);                                    
+        return await baseRepository.getById(employeeId, sqlQuery.employee.getById);                                    
 
     }
     catch (err) {
@@ -75,13 +45,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
 
     try {
 
-        return baseRepository.createNewEntry([firstname, lastname, sex, birthdate, phone],   
-       `INSERT INTO 
-            employees(firstname,lastname,sex,birthdate,phone) 
-        VALUES
-            ($1,$2,$3,$4,$5) 
-        RETURNING 
-            id`);                                     
+        return baseRepository.createNewEntry([firstname, lastname, sex, birthdate, phone], sqlQuery.employee.createNewEntry);                                     
     }
     catch (err) {
 
@@ -98,11 +62,7 @@ employeesRepository.assignPosition = async function (employeeId, positionData) {
 
     try {
 
-        return await baseRepository.createNewEntry([employeeId, positionId],   
-       `INSERT INTO 
-            employee_position(id_employee,id_position) 
-        VALUES 
-            ($1,$2)`);
+        return await baseRepository.createNewEntry([employeeId, positionId], sqlQuery.employee.assignPosition);
             
         
     }
@@ -128,13 +88,7 @@ employeesRepository.updatePosition = async function (employeeId, positionData, c
 
     try {
 
-        return baseRepository.updateById([positionId, employeeId], 
-           `UPDATE 
-                employee_position 
-            SET 
-                id_position=$1 
-            WHERE 
-                id_employee=$2`);
+        return baseRepository.updateById([positionId, employeeId], sqlQuery.employee.updatePosition);
 
     }
     catch (err) {
@@ -154,17 +108,7 @@ employeesRepository.updateById = async function (employeeId, employeeData) {
             return searchResult;
         }
 
-        return baseRepository.updateById([firstname, lastname, sex, birthdate, phone, employeeId], 
-            `UPDATE 
-                employees 
-             SET 
-                firstname = $1, 
-                lastname =$2, 
-                sex=$3, 
-                birthdate=$4,
-                phone=$5 
-            WHERE 
-                id=$6`);
+        return baseRepository.updateById([firstname, lastname, sex, birthdate, phone, employeeId], sqlQuery.employee.updateById);
 
     }
     catch (err) {
@@ -184,7 +128,7 @@ employeesRepository.deleteById = async function (employeeId) {
             return searchResult
         }
 
-        return baseRepository.deleteById(employeeId, 'DELETE FROM employees WHERE id=$1');
+        return baseRepository.deleteById(employeeId, sqlQuery.employee.deleteById);
 
     }
     catch (err) {
