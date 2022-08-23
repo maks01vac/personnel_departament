@@ -71,7 +71,7 @@ departmentController.assignEmployees = async function (req, res, next) {
     logger.info('Entering departmentController.POST');
     logger.debug('trying to assign employee to the department with params', reqBody, id);
   
-    const resultAssignEmployee = await employeesService.assignEmployees(id, reqBody);
+    const resultAssignEmployee = await departmentService.assignEmployees(id, reqBody);
   
   
     if (resultAssignEmployee.success) {

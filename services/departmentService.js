@@ -2,10 +2,16 @@ const departmentService = {};
 
 const validator = require('../validator/validatesInputData');
 const departmentRepository = require('../repositories/department/departmentRepository');
-const logger = require('../logger/logger');
+const employeesService = require('./employeesService');
+
+const logger = require(
+    '../logger/logger');
+
 const createServiceErrors = require('./errors/createServiceErrors')
 const departmentSchemaValidator = require('../models/department/schemaValidator');
-const { func } = require('joi');
+const { number } = require('joi');
+
+
 
 departmentService.getAll = async function (ids) {
     try {
@@ -31,7 +37,13 @@ departmentService.getById = async function (departmentId) {
 
         const resultGetDepartmentById = await departmentRepository.getById(departmentId);
 
-        resultGetDepartmentById.data = resultGetDepartmentById.data[0];
+        if (resultGetDepartmentById.success) {
+
+            resultGetDepartmentById.data = resultGetDepartmentById.data[0];
+
+        }
+
+
 
         return resultGetDepartmentById;
     }
@@ -57,48 +69,121 @@ departmentService.createNewDepartment = async function (departmentData) {
 }
 
 
-departmentService.assignEmployees = async function (departmentId, employeesId) {
+departmentService.assignEmployees = async function (departmentId, employeesIds) {
 
     try {
-        const validatesId = validator.isNumber(Number(departmentId));
+        const validatesId = validator.isNumber(departmentId);
+
+        const departmentSearch = await this.getById(departmentId)
+
+        if(departmentSearch.success===false){
+            return departmentSearch
+        }
 
         if (validatesId.error) {
             return createServiceErrors.invalidId(validatesId.error);
-        } 
+        }
 
-        if (Array.isArray(employeesId)) {
+        let validationErrors
 
-            employeesId.forEach(employeeId => {
+        if (!Array.isArray(employeesIds)) {
 
-                const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeeId);
+            const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeesIds);
 
-                if (resultValidatesEmployeeId.error) {
+            if (resultValidatesEmployeeId.error) {
+                return createServiceErrors.invalidData(resultValidatesEmployeeId.error.details[0])
+            }
 
-                    return createServiceErrors.invalidData(resultValidatesEmployeeId.error);
+            const searchEmployee = await employeesService.getById(employeesIds.employeeId);
 
+            if (searchEmployee.success === false) {
+                return searchEmployee
+            }
+
+            if (searchEmployee.data.department === null) {
+                return departmentRepository.assignEmployees([[employeesIds.employeeId, departmentId]])
+            }
+
+            if (searchEmployee.data.department.id != departmentId) {
+                return departmentRepository.moveEmployees(departmentId, [employeesIds.employeeId])
+            }
+
+            return { success: true }
+        }
+
+
+        validationErrors = employeesIds.map(employee => {
+            const resultValidatesEmployeeIds = departmentSchemaValidator.validateEmployeeId(employee);
+
+            if (resultValidatesEmployeeIds.error) {
+                return resultValidatesEmployeeIds.error.details[0]
+            }
+
+
+        });
+
+        const validatesErrorFilters = validationErrors.filter(error => { return error != null })
+
+        if (validatesErrorFilters.length !== 0) {
+            return createServiceErrors.invalidData(validationErrors.filter(error => { return error != null }))
+        }
+
+        const employeesIdsArray = employeesIds.map(employee=>{
+            return employee.employeeId;
+        })
+
+        const resultGetByIds = await employeesService.getAll(employeesIdsArray);
+
+        if(resultGetByIds.data.length===0){
+            return {
+                success:false,
+                error:{
+                    errorMessage:"Sorry, none of the employees were found",
+                    errorCode:"ID_NOT_FOUND"
                 }
-            });
-
+            }
         }
 
+        const employeeWithoutDepartment = resultGetByIds.data.filter(employee => {
+            if(employee.department == null){
+                return true
+            }
+            return false
+        })
 
-        const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeesId);
+        const arrayIdsEmployeeWithoutDepartment = employeeWithoutDepartment.map(employee=>{return [employee.id,departmentId]})
 
-        if (resultValidatesEmployeeId.error) {
-
-            return createServiceErrors.invalidData(resultValidatesEmployeeId.error);
-
+        let result1
+        if(arrayIdsEmployeeWithoutDepartment.length!==0){
+           result1 = await departmentRepository.assignEmployees(arrayIdsEmployeeWithoutDepartment)
         }
 
+        const employeeMoveToAnotherDepartment = resultGetByIds.data.filter(employee => {
+            if(employee.department !== null){
+                if(employee.department.id!=departmentId){
+                    return true
+                }
+            }
+            return false
+        })
 
+        const arrayIdsEmployeeWithDepartment = employeeMoveToAnotherDepartment.map(employee=>{return employee.id})
 
-        const resultGetDepartmentById = await this.getAll(id);
+        let result2
 
-        resultGetDepartmentById.data = resultGetDepartmentById.data[0];
+        if(arrayIdsEmployeeWithDepartment.length!==0){
+           result2 = await departmentRepository.moveEmployees(departmentId, arrayIdsEmployeeWithDepartment)
+        }
+        return{
+            success:true,
+            result1:result1,
+            result2:result2,
+        }
 
-        return resultGetDepartmentById;
     }
+
     catch (err) {
+
         return createServiceErrors.unexpectedError(err)
     }
 

@@ -15,14 +15,14 @@ createServiceErrors.invalidId = (validationError) => {
     }
 }
 
-createServiceErrors.invalidData = (validationError) => {
+createServiceErrors.invalidData = (validationErrors) => {
 
-    logger.warn('data has not been validated', validationError);
+    logger.warn('data has not been validated', validationErrors);
 
     return {
         success: false,
         error: {
-            details: validationError,
+            details: validationErrors,
             errorCode: "INVALID_DATA"
         }
     }

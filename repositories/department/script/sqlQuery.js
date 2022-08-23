@@ -28,6 +28,17 @@ module.exports = {
                 SET 
                     name=$1 
                 WHERE id=$2`,
+   assignEmployeesToDepartment:
+            `INSERT INTO
+                employee_department(id_employee,id_department) 
+             VALUES
+                %L`,
+   moveEmployeesToAnotherDepartment:`UPDATE 
+                        employee_department 
+                     SET 
+                        id_department=%L 
+                     WHERE 
+                        id_employee IN (%L)`,
 
 
     deleteById: `DELETE FROM 

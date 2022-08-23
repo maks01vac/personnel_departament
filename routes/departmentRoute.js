@@ -12,7 +12,7 @@ departmentRouter.get('/department/:id',departmentController.getById);
 
 departmentRouter.post('/department',departmentController.createNewDepartment);
 
-departmentRouter.post('/department:id/assign_employees',departmentController.assignEmployees);
+departmentRouter.post('/department/:id/assign_employees',departmentController.assignEmployees);
 
 departmentRouter.put('/department/:id',departmentController.updateById);
   

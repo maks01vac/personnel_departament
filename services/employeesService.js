@@ -1,4 +1,4 @@
-const employeesService = {};
+let employeesService = {};
 
 const validator = require('../validator/validatesInputData');
 const employeeSchemaValidator = require('../models/employee/schemaValidator');
@@ -11,15 +11,14 @@ const logger = require('../logger/logger');
 
 const createServiceErrors = require('./errors/createServiceErrors');
 const positionService = require('./positionService');
-const departmentService = require('./departmentService');
 
 
 
 
-employeesService.getAll = async function () {
+employeesService.getAll = async function (ids) {
     try {
 
-        const resultGetAll = await employeesRepository.getAll();
+        const resultGetAll = await employeesRepository.getAll(ids);
 
         const mappingData = mappersEmployee.restructureEmployeeData(resultGetAll.data);
 
@@ -119,13 +118,13 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
 
         if (employeeSearch.data.position === null) {
 
-            const resultAssignPosition = await employeesRepository.assignDepartment(employeeId, positionData);
+            const resultAssignPosition = await employeesRepository.assignPosition(employeeId, positionData);
             return resultAssignPosition;
 
         }
 
         const currentPosition = employeeSearch.data.position.id;
-        const updatePositionResult = await employeesRepository.updateDepartment(employeeId, positionData, currentPosition)
+        const updatePositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
 
         return updatePositionResult;
 
@@ -157,7 +156,20 @@ employeesService.assignOrUpdateDepartment = async function (employeeId, departme
         }
 
 
-        
+        const departmentSearch = await departmentService.getById(departmentData.department);
+        const employeeSearch = await employeesService.getById(employeeId);
+
+        if (departmentSearch.success === false) {
+
+            return departmentSearch;
+
+        }
+
+        if (employeeSearch.success === false) {
+
+            return employeeSearch
+
+        }
 
         if (employeeSearch.data.department === null) {
 

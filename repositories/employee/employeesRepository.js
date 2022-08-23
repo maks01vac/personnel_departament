@@ -8,9 +8,9 @@ const sqlQuery = require('./script/sqlQuery');
 
 const createDatabaseError = require('../errors/databaseErrors')
 
-employeesRepository.getAll = async function () {
+employeesRepository.getAll = async function (idsArray) {
     try {
-        return baseRepository.getAll(sqlQuery.getAll)
+        return baseRepository.getAll(sqlQuery.getAll,sqlQuery.getByIds,idsArray)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -54,7 +54,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesRepository.assignDepartment = async function (employeeId, positionData) {
+employeesRepository.assignPosition = async function (employeeId, positionData) {
 
     if (!employeeId || !positionData) throw new Error('One or more parameters undefined')
 
@@ -74,7 +74,7 @@ employeesRepository.assignDepartment = async function (employeeId, positionData)
 }
 
 
-employeesRepository.updateDepartment = async function (employeeId, positionData, currentPosition) {
+employeesRepository.updatePosition = async function (employeeId, positionData, currentPosition) {
 
     if (!employeeId || !positionData || !currentPosition) throw new Error('One or more parameters undefined');
 
@@ -118,9 +118,9 @@ employeesRepository.updateDepartment = async function (employeeId, departmentDat
 
     if (!employeeId || !departmentData || !currentDepartment) throw new Error('One or more parameters undefined');
 
-    const { position: positionId } = departmentData;
+    const { department: departmentId } = departmentData;
 
-    if (positionId === currentDepartment) {
+    if (departmentId === currentDepartment) {
 
         const errorSameDepartment = createDatabaseError.sameEntry(employeeId)
 
@@ -130,7 +130,7 @@ employeesRepository.updateDepartment = async function (employeeId, departmentDat
 
     try {
 
-        return baseRepository.updateById([positionId, employeeId], sqlQuery.updateDepartment);
+        return baseRepository.updateById([departmentId, employeeId], sqlQuery.updateDepartment);
 
     }
     catch (err) {

@@ -10,7 +10,7 @@ departmentSchemaValidator.validateSchema = (data) => {
 }
 
 departmentSchemaValidator.validateEmployeeId = (data)=>{
-    const schema =oi.object({
+    const schema =joi.object({
         employeeId:joi.number().integer().required(),
     })
     return schema.validate(data)
