@@ -14,6 +14,8 @@ employeesRouter.post('/employees',employeesController.createNewEmployee);
 
 employeesRouter.post('/employees/:id/assign_position',employeesController.assignPositionToEmployee);
 
+employeesRouter.post('/employees/:id/assign_department',employeesController.assignDepartmentToEmployee);
+
 employeesRouter.put('/employees/:id',employeesController.updateById);
   
 employeesRouter.delete('/employees/:id',employeesController.deleteById);

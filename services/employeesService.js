@@ -136,6 +136,60 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
     }
 }
 
+employeesService.assignOrUpdateDepartment = async function (employeeId, departmentData) {
+    try {
+
+        const validatesId = validator.isNumber(employeeId);
+        const validatesDepartmentData = employeeSchemaValidator.departmentAssignmentSchema(departmentData);
+
+        if (validatesId.error) {
+
+            return createServiceErrors.invalidId(validatesId.error.details[0]);
+
+        }
+
+        if (validatesDepartmentData.error) {
+
+            return createServiceErrors.invalidData(validatesDepartmentData.error.details[0]);
+
+        }
+
+
+        const departmentSearch = await departmentService.getById(departmentData.department);
+        const employeeSearch = await employeesService.getById(employeeId);
+
+        if (departmentSearch.success === false) {
+
+            return departmentSearch;
+
+        }
+
+        if (employeeSearch.success === false) {
+
+            return employeeSearch
+
+        }
+
+        if (employeeSearch.data.department === null) {
+
+            const resultAssignDepartment = await employeesRepository.assignDepartment(employeeId, departmentData);
+            return resultAssignDepartment;
+
+        }
+
+        const currentDepartment = employeeSearch.data.department.id;
+        const updateDepartmentResult = await employeesRepository.updateDepartment(employeeId, departmentData, currentDepartment)
+
+        return updateDepartmentResult;
+
+    }
+    catch (err) {
+
+        logger.error("An unexpected error has occurred.Details", err);
+        return createServiceErrors.unexpectedError(err);
+
+    }
+}
 
 employeesService.updateById = async function (employeeId, employeeData) {
 
