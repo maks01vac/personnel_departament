@@ -97,29 +97,6 @@ employeesController.assignPositionToEmployee = async function (req, res, next) {
 };
 
 
-employeesController.assignDepartmentToEmployee = async function (req, res, next) {
-  const reqBody = req.body;
-  const id = req.params.id;
-
-  logger.info('Entering employeesController.POST');
-  logger.debug('trying to assign a position to an employee with params', reqBody, id);
-
-  const resultAssignDepartment = await employeesService.assignOrUpdateDepartment(id, reqBody);
-
-
-  if (resultAssignDepartment.success) {
-
-    logger.info('Entering employeesController.POST: Success',resultAssignDepartment);
-    res.status(200).send(resultAssignDepartment);
-
-    return;
-  }
-
-  logger.warn("Entering employeesController.POST: Failure.", resultAssignDepartment);
-  const statusCode = mappers.mapErrorCodeToHttpCode(resultAssignDepartment.error.errorCode);
-
-  res.status(statusCode).send(resultAssignDepartment);
-};
 
 
 employeesController.updateById = async function (req, res, next) {

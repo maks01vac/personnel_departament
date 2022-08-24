@@ -106,46 +106,6 @@ employeesRepository.updatePosition = async function (employeeId, positionData, c
 }
 
 
-employeesRepository.assignDepartment = async function (employeeId, departmentData) {
-
-    if (!employeeId || !departmentData) throw new Error('One or more parameters undefined')
-
-    const { department: departmentId } = departmentData;
-
-    try {
-
-        return await baseRepository.createNewEntry([employeeId, departmentId], sqlQuery.assignDepartment);
-            
-    }
-    catch (err) {
-        return createDatabaseError.dbConnectionError(err);
-    }
-}
-
-
-employeesRepository.updateDepartment = async function (employeeId, departmentData, currentDepartment) {
-
-    if (!employeeId || !departmentData || !currentDepartment) throw new Error('One or more parameters undefined');
-
-    const { department: departmentId } = departmentData;
-
-    if (departmentId === currentDepartment) {
-
-        const errorSameDepartment = createDatabaseError.sameEntry(employeeId)
-
-        logger.warn('this employee has the same department', errorSameDepartment)
-        return errorSameDepartment;
-    }
-
-    try {
-
-        return baseRepository.updateById([departmentId, employeeId], sqlQuery.updateDepartment);
-
-    }
-    catch (err) {
-        return createDatabaseError.dbConnectionError(err)
-    }
-}
 
 employeesRepository.updateById = async function (employeeId, employeeData) {
 

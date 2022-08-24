@@ -88,18 +88,6 @@ module.exports ={
                      WHERE 
                         id_employee=$2`,
 
-    assignDepartment: `INSERT INTO 
-                          employee_department(id_employee,id_department) 
-                       VALUES 
-                          ($1,$2)`,
-
-    updateDepartment: `UPDATE 
-                        employee_department 
-                    SET 
-                        id_department=$1 
-                    WHERE 
-                        id_employee=$2`,
-
     updateById:`UPDATE 
                     employees 
                 SET 
