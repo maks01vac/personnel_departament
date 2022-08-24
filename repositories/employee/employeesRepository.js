@@ -10,7 +10,16 @@ const createDatabaseError = require('../errors/databaseErrors')
 
 employeesRepository.getAll = async function (idsArray) {
     try {
-        return baseRepository.getAll(sqlQuery.getAll,sqlQuery.getByIds,idsArray)
+
+    const resultGetEmployees = await baseRepository.getAll(sqlQuery.getAll,sqlQuery.getByIds,idsArray);
+
+    if(idsArray!==undefined && resultGetEmployees.data.length===0){
+
+        return createDatabaseError.idNotFound(idsArray)
+
+    }
+
+    return resultGetEmployees;
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)

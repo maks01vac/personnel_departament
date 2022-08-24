@@ -84,42 +84,16 @@ departmentService.assignEmployees = async function (departmentId, employeesIds) 
             return createServiceErrors.invalidId(validatesId.error);
         }
 
-        let validationErrors
-
         if (!Array.isArray(employeesIds)) {
-
-            const resultValidatesEmployeeId = departmentSchemaValidator.validateEmployeeId(employeesIds);
-
-            if (resultValidatesEmployeeId.error) {
-                return createServiceErrors.invalidData(resultValidatesEmployeeId.error.details[0])
-            }
-
-            const searchEmployee = await employeesService.getById(employeesIds.employeeId);
-
-            if (searchEmployee.success === false) {
-                return searchEmployee
-            }
-
-            if (searchEmployee.data.department === null) {
-                return departmentRepository.assignEmployees([[employeesIds.employeeId, departmentId]])
-            }
-
-            if (searchEmployee.data.department.id != departmentId) {
-                return departmentRepository.moveEmployees(departmentId, [employeesIds.employeeId])
-            }
-
-            return { success: true }
+            employeesIds = [employeesIds]
         }
 
-
-        validationErrors = employeesIds.map(employee => {
+        const validationErrors = employeesIds.map(employee => {
             const resultValidatesEmployeeIds = departmentSchemaValidator.validateEmployeeId(employee);
 
             if (resultValidatesEmployeeIds.error) {
                 return resultValidatesEmployeeIds.error.details[0]
             }
-
-
         });
 
         const validatesErrorFilters = validationErrors.filter(error => { return error != null })
@@ -128,56 +102,27 @@ departmentService.assignEmployees = async function (departmentId, employeesIds) 
             return createServiceErrors.invalidData(validationErrors.filter(error => { return error != null }))
         }
 
-        const employeesIdsArray = employeesIds.map(employee=>{
-            return employee.employeeId;
-        })
-
+        const employeesIdsArray = employeesIds.map(employee=> employee.employeeId)
         const resultGetByIds = await employeesService.getAll(employeesIdsArray);
 
-        if(resultGetByIds.data.length===0){
-            return {
-                success:false,
-                error:{
-                    errorMessage:"Sorry, none of the employees were found",
-                    errorCode:"ID_NOT_FOUND"
-                }
-            }
+        
+        const employeeWithoutDepartment = resultGetByIds.data.filter(employee => employee.department == null)
+        const arrayIdsEmployeeWithoutDepartment = employeeWithoutDepartment.map(employee=>[employee.id,departmentId])
+
+
+        const employeeMoveToAnotherDepartment = resultGetByIds.data.filter(employee =>{
+            return (employee.department!=null && employee.department.id != departmentId)})
+        const arrayIdsEmployeeWithDepartment = employeeMoveToAnotherDepartment.map(employee=> employee.id )
+
+        const employeeIdsObject = {
+            employeesIdsWithDepartment:arrayIdsEmployeeWithDepartment,
+            employeesIdsWithoutDepartment:arrayIdsEmployeeWithoutDepartment
         }
 
-        const employeeWithoutDepartment = resultGetByIds.data.filter(employee => {
-            if(employee.department == null){
-                return true
-            }
-            return false
-        })
-
-        const arrayIdsEmployeeWithoutDepartment = employeeWithoutDepartment.map(employee=>{return [employee.id,departmentId]})
-
-        let result1
-        if(arrayIdsEmployeeWithoutDepartment.length!==0){
-           result1 = await departmentRepository.assignEmployees(arrayIdsEmployeeWithoutDepartment)
-        }
-
-        const employeeMoveToAnotherDepartment = resultGetByIds.data.filter(employee => {
-            if(employee.department !== null){
-                if(employee.department.id!=departmentId){
-                    return true
-                }
-            }
-            return false
-        })
-
-        const arrayIdsEmployeeWithDepartment = employeeMoveToAnotherDepartment.map(employee=>{return employee.id})
-
-        let result2
-
-        if(arrayIdsEmployeeWithDepartment.length!==0){
-           result2 = await departmentRepository.moveEmployees(departmentId, arrayIdsEmployeeWithDepartment)
-        }
+        await departmentRepository.assignAndMoveEmployees(departmentId,employeeIdsObject);
+        
         return{
             success:true,
-            result1:result1,
-            result2:result2,
         }
 
     }

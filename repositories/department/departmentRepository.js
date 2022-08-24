@@ -46,49 +46,37 @@ departmentRepository.createNewDepartment = async function (departmentData) {
 }
 
 
-departmentRepository.assignEmployees = async function (arrayIdsEmployeeAndDepartment) {
 
-    if (!arrayIdsEmployeeAndDepartment) throw new Error('One or more parameters undefined');
+departmentRepository.assignAndMoveEmployees = async function (departmentId, employeeIdsObject) {
+
+    if (!departmentId || !employeeIdsObject) throw new Error('One or more parameters undefined');
 
         const client = await dbPool.connect();
         try {
-            const moveEmployeesSql = format(sqlQuery.assignEmployeesToDepartment,arrayIdsEmployeeAndDepartment);
-            console.log(moveEmployeesSql)
             logger.debug('Connection completed')
             logger.debug('Start transaction');
     
-            await client.query('BEGIN;')
-            
-            await client.query(moveEmployeesSql)
-            await client.query('COMMIT;');
-    
-            logger.debug('Transaction was successful');
-            return {
-                success: true,
+            await client.query('BEGIN;');
+
+            if(employeeIdsObject.employeesIdsWithDepartment.length!==0){
+
+               const moveEmployeesSql = format(sqlQuery.moveEmployeesToAnotherDepartment,
+                [departmentId],
+                employeeIdsObject.employeesIdsWithDepartment);
+
+               await client.query(moveEmployeesSql) 
+
             }
-        } catch (err) {
-            await client.query('ROLLBACK')
-    
-            return createDatabaseError.dbError(err);
-    
-        } finally {
-            client.release()
-        }
-}
+            
+            if(employeeIdsObject.employeesIdsWithoutDepartment.length!==0){
 
+                const assignEmployeesSql = format(sqlQuery.assignEmployeesToDepartment,
+                    employeeIdsObject.employeesIdsWithoutDepartment);
 
-departmentRepository.moveEmployees = async function (departmentId, employeesIds) {
+                await client.query(assignEmployeesSql);
 
-    if (!departmentId || !employeesIds) throw new Error('One or more parameters undefined');
-
-        const client = await dbPool.connect();
-        try {
-            logger.debug('Connection completed')
-            logger.debug('Start transaction');
-    
-            await client.query('BEGIN;')
-            const moveEmployeesSql = format(sqlQuery.moveEmployeesToAnotherDepartment,[departmentId],employeesIds);
-            await client.query(moveEmployeesSql)
+             } 
+            
             await client.query('COMMIT;');
     
             logger.debug('Transaction was successful');
