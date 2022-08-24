@@ -5,6 +5,7 @@ const employeeSchemaValidator = require('../models/employee/schemaValidator');
 const mappersEmployee = require('../models/employee/mapperEmployee');
 
 const employeesRepository = require('../repositories/employee/employeesRepository');
+const departmentService = require('./departmentService')
 
 
 const logger = require('../logger/logger');

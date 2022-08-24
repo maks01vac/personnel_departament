@@ -30,7 +30,13 @@ departmentService.getById = async function (id) {
     
         const resultGetDepartmentById = await departmentRepository.getById(id);
 
-        resultGetDepartmentById.data=resultGetDepartmentById.data[0];
+        if(resultGetDepartmentById.success){
+
+            resultGetDepartmentById.data=resultGetDepartmentById.data[0];
+            
+        }
+
+        
 
         return resultGetDepartmentById;
     }
