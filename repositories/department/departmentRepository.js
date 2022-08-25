@@ -9,9 +9,9 @@ const createDatabaseError = require('../errors/databaseErrors');
 const dbPool = require('../../dbPool/dbPool');
 
 
-departmentRepository.getAll = async function (ids) {
+departmentRepository.getAll = async function () {
     try {
-        return baseRepository.getAll(sqlQuery.getAll,sqlQuery.getByIds,ids)
+        return baseRepository.getAll(sqlQuery)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -51,6 +51,9 @@ departmentRepository.assignAndMoveEmployees = async function (departmentId, empl
 
     if (!departmentId || !employeeIdsObject) throw new Error('One or more parameters undefined');
 
+    employeeIdsObject.employeesIdsWithDepartment = employeeIdsObject.employeesIdsWithDepartment || [];
+    employeeIdsObject.employeesIdsWithoutDepartment = employeeIdsObject.employeesIdsWithoutDepartment || []
+
         const client = await dbPool.connect();
         try {
             logger.debug('Connection completed')
@@ -58,7 +61,7 @@ departmentRepository.assignAndMoveEmployees = async function (departmentId, empl
     
             await client.query('BEGIN;');
 
-            if(employeeIdsObject.employeesIdsWithDepartment.length!==0){
+            if(employeeIdsObject.employeesIdsWithDepartment.length){
 
                const moveEmployeesSql = format(sqlQuery.moveEmployeesToAnotherDepartment,
                 [departmentId],
@@ -68,7 +71,10 @@ departmentRepository.assignAndMoveEmployees = async function (departmentId, empl
 
             }
             
-            if(employeeIdsObject.employeesIdsWithoutDepartment.length!==0){
+            if(employeeIdsObject.employeesIdsWithoutDepartment.length){
+
+                employeeIdsObject.employeesIdsWithoutDepartment = 
+                employeeIdsObject.employeesIdsWithoutDepartment.map(employeeId =>[employeeId,departmentId])
 
                 const assignEmployeesSql = format(sqlQuery.assignEmployeesToDepartment,
                     employeeIdsObject.employeesIdsWithoutDepartment);

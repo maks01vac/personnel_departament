@@ -7,24 +7,15 @@ const format = require('pg-format');
 const createDatabaseError = require('./errors/databaseErrors')
 
 
-baseRepository.getAll = async function (sqlQuery,sqlByIds,idsArray) {
+baseRepository.getAll = async function (sqlQuery) {
 
     logger.debug('Try to connect to database')
     const client = await dbPool.connect();
 
     try {
-        logger.debug('Connection completed')
-        let requestToGetAll;
+        logger.debug('Connection completed');
 
-        if(idsArray!==undefined && sqlByIds!==undefined){
-            const sqlQueryGetByIds = format(sqlByIds,idsArray)
-            requestToGetAll = await client.query(sqlQueryGetByIds);
-
-        }else{
-
-            requestToGetAll = await client.query(sqlQuery);
-
-        }
+        const requestToGetAll= await client.query(sqlQuery)
 
         return {
             success: true,
