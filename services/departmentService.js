@@ -9,7 +9,7 @@ const logger = require(
 
 const createServiceErrors = require('./errors/createServiceErrors')
 const departmentSchemaValidator = require('../models/department/schemaValidator');
-const { number } = require('joi');
+const { number, func } = require('joi');
 
 
 
@@ -51,6 +51,7 @@ departmentService.getById = async function (departmentId) {
         return createServiceErrors.unexpectedError(err)
     }
 }
+
 
 departmentService.createNewDepartment = async function (departmentData) {
     try {

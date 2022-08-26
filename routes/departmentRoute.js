@@ -2,13 +2,15 @@ var express = require('express');
 var router = express.Router();
 var express = require('express');
 
-const departmentController = require('../controllers/departmentController')
+const departmentController = require('../controllers/departmentController');
+const { idNotFound } = require('../repositories/errors/databaseErrors');
 
 var departmentRouter = express.Router();
 
 departmentRouter.get('/department',departmentController.getAll);
 
 departmentRouter.get('/department/:id',departmentController.getById);
+
 
 departmentRouter.post('/department',departmentController.createNewDepartment);
 

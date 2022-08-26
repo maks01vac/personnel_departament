@@ -17,6 +17,12 @@ module.exports = {
                 department
              WHERE
                 id=$1`,
+   getHistoryChangeDepartmentById: `SELECT 
+                date_from,date_to,id_employee,id_department 
+             FROM 
+                employee_department_history
+             WHERE
+                id=$1`,
 
     createNewEntry: `INSERT INTO 
                         department(name) 
@@ -33,6 +39,10 @@ module.exports = {
                 employee_department(id_employee,id_department) 
              VALUES
                 %L`,
+   assignEmployeesHistory:`INSERT INTO
+                              employee_department_history(date_from,id_employee,id_department)
+                           VALUES %L
+                           `,
    moveEmployeesToAnotherDepartment:`UPDATE 
                         employee_department 
                      SET 

@@ -26,7 +26,7 @@ CREATE TABLE employee_department_history(
     date_to DATE,
     id_employee INTEGER REFERENCES employees (id),
     id_department INTEGER REFERENCES department (id),
-    PRIMARY KEY (date_from,date_to, id_employee, id_department)
+    PRIMARY KEY (date_from, id_employee, id_department)
 );
 
 
