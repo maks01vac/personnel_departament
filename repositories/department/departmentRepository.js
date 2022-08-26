@@ -12,7 +12,7 @@ const { date } = require('joi');
 
 departmentRepository.getAll = async function () {
     try {
-        return baseRepository.getAll(sqlQuery)
+        return baseRepository.getAll(sqlQuery.getAll)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -49,22 +49,38 @@ departmentRepository.createNewDepartment = async function (departmentData) {
 
 departmentRepository.moveEmployees = async function (client, departmentId, moveEmployeeIds) {
 
-    client.query()
+    const dateNow = new Date();
+    const dateNowFormat = dateNow.getFullYear() + '-' + (dateNow.getMonth() + 1) + '-' 
+    + dateNow.getDate()+' '+dateNow.getHours()+':'+dateNow.getMinutes()+':'+dateNow.getSeconds();
+
+
+    const moveEmployeesSql = pgFormat(sqlQuery.moveEmployeesToAnotherDepartment,
+        [departmentId],
+        moveEmployeeIds);
+    await client.query(moveEmployeesSql);
+
+    const updateDateToSql = pgFormat(sqlQuery.updateDateTo, moveEmployeeIds)
+    await client.query(updateDateToSql, [dateNowFormat]);
+
+    const insertHistoryData = moveEmployeeIds.map(employeeId => [dateNowFormat, employeeId, departmentId]);
+    const insertNewHistoryEntrySql = pgFormat(sqlQuery.insertNewEntryInHistory, insertHistoryData)
+    await client.query(insertNewHistoryEntrySql);
 
 }
 
 departmentRepository.assignEmployees = async function (client, departmentId, assignEmployeeIds) {
 
-    const assignEmployees = assignEmployeeIds.map(employeeId =>[employeeId, departmentId]);
+    const assignEmployees = assignEmployeeIds.map(employeeId => [employeeId, departmentId]);
 
     const dateNow = new Date();
-    const dateNowFormat = dateNow.getFullYear() + '-' + (dateNow.getMonth()+1)+ '-' + dateNow.getDate();
+    const dateNowFormat = dateNow.getFullYear() + '-' + (dateNow.getMonth() + 1) + '-' 
+    + dateNow.getDate()+' '+dateNow.getHours()+':'+dateNow.getMinutes()+':'+dateNow.getSeconds();
 
-    const assignEmployeeHistory = assignEmployeeIds.map(employeeId =>[dateNowFormat, employeeId, departmentId]);
+    const assignEmployeeHistory = assignEmployeeIds.map(employeeId => [dateNowFormat, employeeId, departmentId]);
 
 
-    const assignEmployeesSql = pgFormat(sqlQuery.assignEmployeesToDepartment,assignEmployees);
-    const assignEmployeesHistorySql = pgFormat(sqlQuery.assignEmployeesHistory,assignEmployeeHistory);
+    const assignEmployeesSql = pgFormat(sqlQuery.assignEmployeesToDepartment, assignEmployees);
+    const assignEmployeesHistorySql = pgFormat(sqlQuery.insertNewEntryInHistory, assignEmployeeHistory);
 
     await client.query(assignEmployeesSql);
     await client.query(assignEmployeesHistorySql);
@@ -89,11 +105,7 @@ departmentRepository.assignAndMoveEmployees = async function (departmentId, empl
 
         if (employeeIdsObject.employeesIdsWithDepartment.length) {
 
-            const moveEmployeesSql = pgFormat(sqlQuery.moveEmployeesToAnotherDepartment,
-                [departmentId],
-                employeeIdsObject.employeesIdsWithDepartment);
-
-            await client.query(moveEmployeesSql);
+            await this.moveEmployees(client, departmentId, employeeIdsObject.employeesIdsWithDepartment)
 
         }
 
