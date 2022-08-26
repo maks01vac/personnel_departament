@@ -19,4 +19,5 @@ employeeSchemaValidator.positionAssignmentSchema =(data) =>{
     })
     return schema.validate(data);
 }
+
 module.exports = employeeSchemaValidator

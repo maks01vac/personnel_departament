@@ -97,6 +97,8 @@ employeesController.assignPositionToEmployee = async function (req, res, next) {
 };
 
 
+
+
 employeesController.updateById = async function (req, res, next) {
   const reqBody = req.body;
   const id = req.params.id;

@@ -21,6 +21,29 @@ module.exports ={
                 employee_department ed on e.id=ed.id_employee
             LEFT JOIN 
                 department d on ed.id_department=d.id`,
+    getByIds: `SELECT 
+                e.id,
+                firstname,
+                lastname,
+                sex,
+                birthdate,
+                phone,
+                p.id as id_position,
+                p.name as name_position,
+                d.id as id_department,
+                d.name as name_department 
+            FROM 
+                employees e 
+            LEFT JOIN 
+                employee_position ep on e.id=ep.id_employee 
+            LEFT JOIN 
+                position p on ep.id_position=p.id
+            LEFT JOIN 
+                employee_department ed on e.id=ed.id_employee
+            LEFT JOIN 
+                department d on ed.id_department=d.id
+            WHERE
+                e.id IN (%L)`,            
 
     getById: `SELECT 
                 e.id,

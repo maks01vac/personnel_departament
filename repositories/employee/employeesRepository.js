@@ -5,12 +5,20 @@ const logger = require('../../logger/logger');
 const mappersEmployee = require('../../models/employee/mapperEmployee');
 const baseRepository = require('../baseRepository');
 const sqlQuery = require('./script/sqlQuery');
+const format = require('pg-format')
 
 const createDatabaseError = require('../errors/databaseErrors')
 
-employeesRepository.getAll = async function () {
+employeesRepository.getAll = async function (idsArray) {
     try {
-        return baseRepository.getAll(sqlQuery.getAll)
+
+        if (idsArray !== undefined && idsArray.length!==0) {
+
+            const sqlGetByIds = format(sqlQuery.getByIds,idsArray);
+            return await baseRepository.getAll(sqlGetByIds);
+        }
+
+        return await baseRepository.getAll(sqlQuery.getAll);
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -25,7 +33,7 @@ employeesRepository.getById = async function (employeeId) {
 
     try {
 
-        return await baseRepository.getById(employeeId, sqlQuery.getById);                                    
+        return await baseRepository.getById(employeeId, sqlQuery.getById);
 
     }
     catch (err) {
@@ -45,7 +53,7 @@ employeesRepository.createNewEmployee = async function (employeeData) {
 
     try {
 
-        return baseRepository.createNewEntry([firstname, lastname, sex, birthdate, phone], sqlQuery.createNewEntry);                                     
+        return baseRepository.createNewEntry([firstname, lastname, sex, birthdate, phone], sqlQuery.createNewEntry);
     }
     catch (err) {
 
@@ -63,8 +71,8 @@ employeesRepository.assignPosition = async function (employeeId, positionData) {
     try {
 
         return await baseRepository.createNewEntry([employeeId, positionId], sqlQuery.assignPosition);
-            
-        
+
+
     }
     catch (err) {
 
@@ -95,6 +103,8 @@ employeesRepository.updatePosition = async function (employeeId, positionData, c
         return createDatabaseError.dbConnectionError(err)
     }
 }
+
+
 
 employeesRepository.updateById = async function (employeeId, employeeData) {
 

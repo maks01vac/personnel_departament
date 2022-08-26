@@ -1,4 +1,4 @@
-const employeesService = {};
+let employeesService = {};
 
 const validator = require('../validator/validatesInputData');
 const employeeSchemaValidator = require('../models/employee/schemaValidator');
@@ -11,13 +11,15 @@ const logger = require('../logger/logger');
 
 const createServiceErrors = require('./errors/createServiceErrors');
 const positionService = require('./positionService');
+const { create } = require('hbs');
 
 
 
-employeesService.getAll = async function () {
+
+employeesService.getAll = async function (ids) {
     try {
 
-        const resultGetAll = await employeesRepository.getAll();
+        const resultGetAll = await employeesRepository.getAll(ids);
 
         const mappingData = mappersEmployee.restructureEmployeeData(resultGetAll.data);
 
@@ -123,9 +125,9 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
         }
 
         const currentPosition = employeeSearch.data.position.id;
-        const assignPositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
+        const updatePositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
 
-        return assignPositionResult;
+        return updatePositionResult;
 
     }
     catch (err) {
@@ -135,6 +137,7 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionDa
 
     }
 }
+
 
 
 employeesService.updateById = async function (employeeId, employeeData) {
