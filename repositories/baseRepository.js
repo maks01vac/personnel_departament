@@ -1,5 +1,6 @@
 const baseRepository = {};
 
+const { func, object } = require('joi');
 const dbPool = require('../dbPool/dbPool')
 const logger = require('../logger/logger');
 
@@ -14,7 +15,7 @@ baseRepository.getAll = async function (sqlQuery) {
     try {
         logger.debug('Connection completed');
 
-        const requestToGetAll= await client.query(sqlQuery)
+        const requestToGetAll = await client.query(sqlQuery)
 
         return {
             success: true,
@@ -33,7 +34,7 @@ baseRepository.getAll = async function (sqlQuery) {
 
 
 
-baseRepository.getById = async function (id,sqlQuery) {
+baseRepository.getById = async function (id, sqlQuery) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
@@ -59,7 +60,17 @@ baseRepository.getById = async function (id,sqlQuery) {
 
 }
 
-baseRepository.createNewEntry = async function (data,sqlQuery) {
+
+
+baseRepository.createNewEntry = async function (data, sqlQuery) {
+
+
+    dbConnection.open(
+        ctx => {
+            var res = ctx.execSql('SELECT 1', [1])
+        }
+    );
+
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
@@ -91,7 +102,7 @@ baseRepository.createNewEntry = async function (data,sqlQuery) {
     }
 }
 
-baseRepository.updateById = async function (data,sqlQuery) {
+baseRepository.updateById = async function (data, sqlQuery) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
@@ -119,7 +130,7 @@ baseRepository.updateById = async function (data,sqlQuery) {
     }
 }
 
-baseRepository.deleteById = async function (id,sqlQuery) {
+baseRepository.deleteById = async function (id, sqlQuery) {
 
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
