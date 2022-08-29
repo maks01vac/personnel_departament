@@ -4,23 +4,11 @@ module.exports = {
                 id,name 
              FROM 
                 department`,
-   getByIds: `SELECT 
-                id,name 
-             FROM 
-                department
-             WHERE
-               id IN ($1::int[])`,
 
    getById: `SELECT 
                 id,name 
              FROM 
                 department
-             WHERE
-                id=$1`,
-   getHistoryChangeDepartmentById: `SELECT 
-                date_from,date_to,id_employee,id_department 
-             FROM 
-                employee_department_history
              WHERE
                 id=$1`,
    updateDateTo: 'UPDATE employee_department_history SET date_to=$1 WHERE id_employee IN (%L) AND date_to IS NULL',

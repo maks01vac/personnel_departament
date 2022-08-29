@@ -7,7 +7,41 @@ const pgFormat = require('pg-format');
 
 const createDatabaseError = require('../errors/databaseErrors');
 const dbPool = require('../../dbPool/dbPool');
-const { date } = require('joi');
+
+const moveEmployees = async function (client, departmentId, moveEmployeeIds) {
+
+    const dateNow = new Date();
+
+    const moveEmployeesSql = pgFormat(sqlQuery.moveEmployeesToAnotherDepartment,
+        [departmentId],
+        moveEmployeeIds);
+    await client.query(moveEmployeesSql);
+
+    const updateDateToSql = pgFormat(sqlQuery.updateDateTo, moveEmployeeIds)
+    await client.query(updateDateToSql, [dateNow]);
+
+    const insertHistoryData = moveEmployeeIds.map(employeeId => [dateNow, employeeId, departmentId]);
+    const insertNewHistoryEntrySql = pgFormat(sqlQuery.insertNewEntryInHistory, insertHistoryData)
+    await client.query(insertNewHistoryEntrySql);
+
+}
+
+const assignEmployees = async function (client, departmentId, assignEmployeeIds) {
+
+    const assignEmployees = assignEmployeeIds.map(employeeId => [employeeId, departmentId]);
+
+    const dateNow = new Date();
+
+    const assignEmployeeHistory = assignEmployeeIds.map(employeeId => [dateNow, employeeId, departmentId]);
+
+
+    const assignEmployeesSql = pgFormat(sqlQuery.assignEmployeesToDepartment, assignEmployees);
+    const assignEmployeesHistorySql = pgFormat(sqlQuery.insertNewEntryInHistory, assignEmployeeHistory);
+
+    await client.query(assignEmployeesSql);
+    await client.query(assignEmployeesHistorySql);
+
+}
 
 
 departmentRepository.getAll = async function () {
@@ -47,46 +81,6 @@ departmentRepository.createNewDepartment = async function (departmentData) {
     }
 }
 
-departmentRepository.moveEmployees = async function (client, departmentId, moveEmployeeIds) {
-
-    const dateNow = new Date();
-    const dateNowFormat = dateNow.getFullYear() + '-' + (dateNow.getMonth() + 1) + '-' 
-    + dateNow.getDate()+' '+dateNow.getHours()+':'+dateNow.getMinutes()+':'+dateNow.getSeconds();
-
-
-    const moveEmployeesSql = pgFormat(sqlQuery.moveEmployeesToAnotherDepartment,
-        [departmentId],
-        moveEmployeeIds);
-    await client.query(moveEmployeesSql);
-
-    const updateDateToSql = pgFormat(sqlQuery.updateDateTo, moveEmployeeIds)
-    await client.query(updateDateToSql, [dateNowFormat]);
-
-    const insertHistoryData = moveEmployeeIds.map(employeeId => [dateNowFormat, employeeId, departmentId]);
-    const insertNewHistoryEntrySql = pgFormat(sqlQuery.insertNewEntryInHistory, insertHistoryData)
-    await client.query(insertNewHistoryEntrySql);
-
-}
-
-departmentRepository.assignEmployees = async function (client, departmentId, assignEmployeeIds) {
-
-    const assignEmployees = assignEmployeeIds.map(employeeId => [employeeId, departmentId]);
-
-    const dateNow = new Date();
-    const dateNowFormat = dateNow.getFullYear() + '-' + (dateNow.getMonth() + 1) + '-' 
-    + dateNow.getDate()+' '+dateNow.getHours()+':'+dateNow.getMinutes()+':'+dateNow.getSeconds();
-
-    const assignEmployeeHistory = assignEmployeeIds.map(employeeId => [dateNowFormat, employeeId, departmentId]);
-
-
-    const assignEmployeesSql = pgFormat(sqlQuery.assignEmployeesToDepartment, assignEmployees);
-    const assignEmployeesHistorySql = pgFormat(sqlQuery.insertNewEntryInHistory, assignEmployeeHistory);
-
-    await client.query(assignEmployeesSql);
-    await client.query(assignEmployeesHistorySql);
-
-}
-
 
 
 departmentRepository.assignAndMoveEmployees = async function (departmentId, employeeIdsObject) {
@@ -105,13 +99,13 @@ departmentRepository.assignAndMoveEmployees = async function (departmentId, empl
 
         if (employeeIdsObject.employeesIdsWithDepartment.length) {
 
-            await this.moveEmployees(client, departmentId, employeeIdsObject.employeesIdsWithDepartment)
+            await moveEmployees(client, departmentId, employeeIdsObject.employeesIdsWithDepartment)
 
         }
 
         if (employeeIdsObject.employeesIdsWithoutDepartment.length) {
 
-            await this.assignEmployees(client, departmentId, employeeIdsObject.employeesIdsWithoutDepartment)
+            await assignEmployees(client, departmentId, employeeIdsObject.employeesIdsWithoutDepartment)
 
         }
 

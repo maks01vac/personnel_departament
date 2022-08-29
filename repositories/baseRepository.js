@@ -2,7 +2,6 @@ const baseRepository = {};
 
 const dbPool = require('../dbPool/dbPool')
 const logger = require('../logger/logger');
-const format = require('pg-format');
 
 const createDatabaseError = require('./errors/databaseErrors')
 

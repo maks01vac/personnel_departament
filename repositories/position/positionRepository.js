@@ -1,7 +1,5 @@
 const positionRepository = {};
 
-const dbPool = require('../../dbPool/dbPool')
-const logger = require('../../logger/logger');
 
 const baseRepository = require('../baseRepository');
 const sqlQuery = require('./script/sqlQuery');
