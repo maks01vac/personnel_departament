@@ -1,39 +1,38 @@
 module.exports = {
-    
-    getAll: `SELECT 
+
+   getAll: `SELECT 
                 id,name 
              FROM 
                 department`,
-    getByIds: `SELECT 
-                id,name 
-             FROM 
-                department
-             WHERE
-               id IN ($1::int[])`,
 
-    getById: `SELECT 
+   getById: `SELECT 
                 id,name 
              FROM 
                 department
              WHERE
                 id=$1`,
+   updateDateTo: 'UPDATE employee_department_history SET date_to=$1 WHERE id_employee IN (%L) AND date_to IS NULL',
 
-    createNewEntry: `INSERT INTO 
+   createNewEntry: `INSERT INTO 
                         department(name) 
                     VALUES
                         ($1);`,
 
-    updateById:`UPDATE 
+   updateById: `UPDATE 
                     department 
                 SET 
                     name=$1 
                 WHERE id=$2`,
    assignEmployeesToDepartment:
-            `INSERT INTO
+      `INSERT INTO
                 employee_department(id_employee,id_department) 
              VALUES
                 %L`,
-   moveEmployeesToAnotherDepartment:`UPDATE 
+   insertNewEntryInHistory: `INSERT INTO
+                              employee_department_history(date_from,id_employee,id_department)
+                           VALUES %L
+                           `,
+   moveEmployeesToAnotherDepartment: `UPDATE 
                         employee_department 
                      SET 
                         id_department=%L 
@@ -41,7 +40,7 @@ module.exports = {
                         id_employee IN (%L)`,
 
 
-    deleteById: `DELETE FROM 
+   deleteById: `DELETE FROM 
                     department 
                  WHERE 
                     id=$1`

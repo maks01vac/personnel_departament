@@ -3,15 +3,50 @@ const departmentRepository = {};
 const logger = require('../../logger/logger');
 const baseRepository = require('../baseRepository');
 const sqlQuery = require('./script/sqlQuery');
-const format = require('pg-format');
+const pgFormat = require('pg-format');
 
 const createDatabaseError = require('../errors/databaseErrors');
 const dbPool = require('../../dbPool/dbPool');
 
+const moveEmployees = async function (client, departmentId, moveEmployeeIds) {
+
+    const dateNow = new Date();
+
+    const moveEmployeesSql = pgFormat(sqlQuery.moveEmployeesToAnotherDepartment,
+        [departmentId],
+        moveEmployeeIds);
+    await client.query(moveEmployeesSql);
+
+    const updateDateToSql = pgFormat(sqlQuery.updateDateTo, moveEmployeeIds)
+    await client.query(updateDateToSql, [dateNow]);
+
+    const insertHistoryData = moveEmployeeIds.map(employeeId => [dateNow, employeeId, departmentId]);
+    const insertNewHistoryEntrySql = pgFormat(sqlQuery.insertNewEntryInHistory, insertHistoryData)
+    await client.query(insertNewHistoryEntrySql);
+
+}
+
+const assignEmployees = async function (client, departmentId, assignEmployeeIds) {
+
+    const assignEmployees = assignEmployeeIds.map(employeeId => [employeeId, departmentId]);
+
+    const dateNow = new Date();
+
+    const assignEmployeeHistory = assignEmployeeIds.map(employeeId => [dateNow, employeeId, departmentId]);
+
+
+    const assignEmployeesSql = pgFormat(sqlQuery.assignEmployeesToDepartment, assignEmployees);
+    const assignEmployeesHistorySql = pgFormat(sqlQuery.insertNewEntryInHistory, assignEmployeeHistory);
+
+    await client.query(assignEmployeesSql);
+    await client.query(assignEmployeesHistorySql);
+
+}
+
 
 departmentRepository.getAll = async function () {
     try {
-        return baseRepository.getAll(sqlQuery)
+        return baseRepository.getAll(sqlQuery.getAll)
     }
     catch (err) {
         return createDatabaseError.dbConnectionError(err)
@@ -30,6 +65,7 @@ departmentRepository.getById = async function (departmentId) {
         return createDatabaseError.dbConnectionError(err)
     }
 }
+
 
 departmentRepository.createNewDepartment = async function (departmentData) {
 
@@ -54,49 +90,39 @@ departmentRepository.assignAndMoveEmployees = async function (departmentId, empl
     employeeIdsObject.employeesIdsWithDepartment = employeeIdsObject.employeesIdsWithDepartment || [];
     employeeIdsObject.employeesIdsWithoutDepartment = employeeIdsObject.employeesIdsWithoutDepartment || []
 
-        const client = await dbPool.connect();
-        try {
-            logger.debug('Connection completed')
-            logger.debug('Start transaction');
-    
-            await client.query('BEGIN;');
+    const client = await dbPool.connect();
+    try {
+        logger.debug('Connection completed')
+        logger.debug('Start transaction');
 
-            if(employeeIdsObject.employeesIdsWithDepartment.length){
+        await client.query('BEGIN;');
 
-               const moveEmployeesSql = format(sqlQuery.moveEmployeesToAnotherDepartment,
-                [departmentId],
-                employeeIdsObject.employeesIdsWithDepartment);
+        if (employeeIdsObject.employeesIdsWithDepartment.length) {
 
-               await client.query(moveEmployeesSql) 
+            await moveEmployees(client, departmentId, employeeIdsObject.employeesIdsWithDepartment)
 
-            }
-            
-            if(employeeIdsObject.employeesIdsWithoutDepartment.length){
-
-                employeeIdsObject.employeesIdsWithoutDepartment = 
-                employeeIdsObject.employeesIdsWithoutDepartment.map(employeeId =>[employeeId,departmentId])
-
-                const assignEmployeesSql = format(sqlQuery.assignEmployeesToDepartment,
-                    employeeIdsObject.employeesIdsWithoutDepartment);
-
-                await client.query(assignEmployeesSql);
-
-             } 
-            
-            await client.query('COMMIT;');
-    
-            logger.debug('Transaction was successful');
-            return {
-                success: true,
-            }
-        } catch (err) {
-            await client.query('ROLLBACK')
-    
-            return createDatabaseError.dbError(err);
-    
-        } finally {
-            client.release()
         }
+
+        if (employeeIdsObject.employeesIdsWithoutDepartment.length) {
+
+            await assignEmployees(client, departmentId, employeeIdsObject.employeesIdsWithoutDepartment)
+
+        }
+
+        await client.query('COMMIT;');
+
+        logger.debug('Transaction was successful');
+        return {
+            success: true,
+        }
+    } catch (err) {
+        await client.query('ROLLBACK')
+
+        return createDatabaseError.dbError(err);
+
+    } finally {
+        client.release()
+    }
 }
 
 

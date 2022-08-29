@@ -1,8 +1,6 @@
 const employeesRepository = {};
 
-const dbPool = require('../../dbPool/dbPool');
 const logger = require('../../logger/logger');
-const mappersEmployee = require('../../models/employee/mapperEmployee');
 const baseRepository = require('../baseRepository');
 const sqlQuery = require('./script/sqlQuery');
 const format = require('pg-format')
