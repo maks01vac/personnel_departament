@@ -24,6 +24,8 @@ const moveEmployees = async function (client, departmentId, moveEmployeeIds) {
     const insertNewHistoryEntrySql = pgFormat(sqlQuery.insertNewEntryInHistory, insertHistoryData)
     await client.query(insertNewHistoryEntrySql);
 
+    
+
 }
 
 const assignEmployees = async function (client, departmentId, assignEmployeeIds) {
