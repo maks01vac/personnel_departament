@@ -4,10 +4,15 @@ const validator = require('../validator/validatesInputData');
 const departmentRepository = require('../repositories/department/departmentRepository');
 const employeesService = require('./employeesService');
 
+
 const logger = require('../logger/logger');
 
 const createServiceErrors = require('./errors/createServiceErrors')
 const departmentSchemaValidator = require('../models/department/schemaValidator');
+const dbConnection = require('../database/dbConnection');
+const assignEmployeeToDepartment = require('../commands/assignEmployeeToDepartment');
+const moveEmployeeToDepartment = require('../commands/moveEmployeeToDepartment');
+
 
 
 
@@ -65,6 +70,17 @@ departmentService.createNewDepartment = async function (departmentData) {
     catch (err) {
         return createServiceErrors.unexpectedError(err);
     }
+}
+
+departmentService.assignEmployeesV2 = async function (departmentId, employeesIds) {
+
+
+    dbConnection.execute(async context =>{
+
+        moveEmployeeToDepartment('13',[100],context)
+
+        assignEmployeeToDepartment('12',[103],context)
+    })
 }
 
 
