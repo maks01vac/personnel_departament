@@ -1,7 +1,6 @@
 const baseRepository = {};
 
-const { func, object } = require('joi');
-const dbPool = require('../dbPool/dbPool')
+const dbPool = require('../database/dbPool')
 const logger = require('../logger/logger');
 
 const createDatabaseError = require('./errors/databaseErrors')
