@@ -72,20 +72,7 @@ departmentService.createNewDepartment = async function (departmentData) {
     }
 }
 
-departmentService.assignEmployeesV2 = async function (departmentId, employeesIds) {
-
-
-    dbConnection.execute(async context =>{
-
-        moveEmployeeToDepartment('13',[100],context)
-
-        assignEmployeeToDepartment('12',[103],context)
-    })
-}
-
-
 departmentService.assignEmployees = async function (departmentId, employeesIds) {
-
     try {
         employeesIds = [employeesIds].flat();
 
@@ -115,21 +102,23 @@ departmentService.assignEmployees = async function (departmentId, employeesIds) 
         const employeesToAssign = foundEmployees.data.filter(employee => employee.department == null)
         const employeesToMove = foundEmployees.data.filter(employee => employee.department && employee.department.id !== departmentId);
 
-        const employeeIdsObject = {
-            employeesIdsWithDepartment: employeesToMove.map(employee => employee.id),
-            employeesIdsWithoutDepartment: employeesToAssign.map(employee => employee.id)
-        }
 
-        await departmentRepository.assignAndMoveEmployees(departmentId, employeeIdsObject);
-
+        dbConnection.execute(async context => {
+            if (employeesToAssign.length) {
+                const idEmployeesToAssign = employeesToAssign.map(employee => employee.id)
+                assignEmployeeToDepartment(departmentId, idEmployeesToAssign, context)
+            }
+            if (employeesToMove.length) {
+                const idEmployeesToMove = employeesToMove.map(employee => employee.id)
+                moveEmployeeToDepartment(departmentId, idEmployeesToMove, context)
+            }
+        })
         return {
-            success: true,
+            success: true
         }
-
     }
 
     catch (err) {
-
         return createServiceErrors.unexpectedError(err)
     }
 
