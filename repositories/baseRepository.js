@@ -64,13 +64,6 @@ baseRepository.getById = async function (id, sqlQuery) {
 baseRepository.createNewEntry = async function (data, sqlQuery) {
 
 
-    dbConnection.open(
-        ctx => {
-            var res = ctx.execSql('SELECT 1', [1])
-        }
-    );
-
-
     logger.debug('Try to connect to database');
     const client = await dbPool.connect();
     try {
