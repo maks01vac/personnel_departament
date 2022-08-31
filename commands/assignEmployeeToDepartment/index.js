@@ -1,13 +1,13 @@
 
-const assignEmployeeSql = require('./assignEmployee')
-const trackHistoryDepartmentChange = require('./trackHistoryAssignmentChanges')
+const assignEmployeeToDepartment = require('./assignEmployeeToDepartment')
+const trackHistoryAssignmentChanges = require('./trackHistoryAssignmentChanges')
 
 
-async function assignEmployeeToDepartment(departmentId,assignEmployeeIds,context) {
+async function assignEmployeeToDepartmentAndTrackHistory(departmentId,assignEmployeeIds,context) {
 
-    await assignEmployeeSql(departmentId,assignEmployeeIds,context);
+    await assignEmployeeToDepartment(departmentId,assignEmployeeIds,context);
 
-    await trackHistoryDepartmentChange(departmentId,assignEmployeeIds,context);
+    await trackHistoryAssignmentChanges(departmentId,assignEmployeeIds,context);
 
 }
-module.exports = assignEmployeeToDepartment
+module.exports = assignEmployeeToDepartmentAndTrackHistory
