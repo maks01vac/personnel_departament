@@ -1,4 +1,4 @@
-let employeesService = {};
+const employeesService = {};
 
 const validator = require('../validator/validatesInputData');
 const employeeSchemaValidator = require('../models/employee/schemaValidator');
@@ -13,7 +13,59 @@ const createServiceErrors = require('./errors/createServiceErrors');
 const positionService = require('./positionService');
 
 
+async function positionValidate(positionId) {
+    const validatesPositionId = employeeSchemaValidator.positionAssignmentSchema(positionId)
 
+    if (validatesPositionId.error) {
+        return createServiceErrors.invalidId(validatesId.error.details[0]);
+    }
+
+    const positionSearch = await positionService.getById(positionId.position);
+
+    if (positionSearch.success === false) {
+        return positionSearch
+    }
+    return {
+        success: true,
+    }
+}
+
+async function departmentValidates(departmentId) {
+    const validatesDepartmentId = employeeSchemaValidator.departmentAssignmentSchema(departmentId)
+
+    if (validatesDepartmentId.error) {
+        return createServiceErrors.invalidId(validatesId.error.details[0]);
+    }
+
+    const departmentSearch = await positionService.getById(positionId.position);
+
+    if (departmentSearch.success === false) {
+        return departmentSearch
+    }
+    return {
+        success: true,
+    }
+
+}
+
+async function employeeValidatesAndSearch(employeeId) {
+    const validatesEmployeeId = validator.isNumber(employeeId)
+
+    if (validatesEmployeeId.error) {
+        return createServiceErrors.invalidId(validatesId.error.details[0]);
+    }
+
+    const employeeSearch = await employeesService.getById(positionId.position);
+
+    if (employeeSearch.success === false) {
+        return employeeSearch
+    }
+    return {
+        success: true,
+        data: employeeSearch.data
+    }
+
+}
 
 
 employeesService.getAll = async function (ids) {
@@ -47,13 +99,13 @@ employeesService.getById = async function (employeeId) {
         }
 
         const resultGetById = await employeesRepository.getById(employeeId);
-        if(resultGetById.success){
+        if (resultGetById.success) {
 
             const mappingData = mappersEmployee.restructureEmployeeData(resultGetById.data);
             resultGetById.data = mappingData[0];
 
         }
-        
+
 
         return await resultGetById;
     }
@@ -84,50 +136,72 @@ employeesService.createNewEmployee = async function (employeeData) {
     }
 }
 
-employeesService.assignOrUpdatePosition = async function (employeeId, positionData) {
+employeesService.assignOrUpdatePosition = async function (employeeId, positionId) {
     try {
 
-        const validatesId = validator.isNumber(employeeId);
-        const validatesPositionData = employeeSchemaValidator.positionAssignmentSchema(positionData);
+        const resultValidatesPositionId = await positionValidate(positionId)
 
-        if (validatesId.error) {
+        if (resultValidatesPositionId.success === false) {
+            return resultValidatesPositionId;
+        }
+        const resultValidatesEmployeeId = await employeeValidatesAndSearch(employeeId);
 
-            return createServiceErrors.invalidId(validatesId.error.details[0]);
-
+        if (resultValidatesEmployeeId.success === false) {
+            return resultValidatesEmployeeId
         }
 
-        if (validatesPositionData.error) {
+        if (resultValidatesEmployeeId.data.position === null) {
 
-            return createServiceErrors.invalidData(validatesPositionData.error.details[0]);
-
-        }
-
-        const positionSearch = await positionService.getById(positionData.position);
-        const employeeSearch = await employeesService.getById(employeeId);
-
-        if (positionSearch.success === false) {
-
-            return positionSearch;
-
-        }
-
-        if (employeeSearch.success === false) {
-
-            return employeeSearch
-
-        }
-
-        if (employeeSearch.data.position === null) {
-
-            const resultAssignPosition = await employeesRepository.assignPosition(employeeId, positionData);
+            const resultAssignPosition = await employeesRepository.assignPosition(employeeId, positionId);
             return resultAssignPosition;
 
         }
 
-        const currentPosition = employeeSearch.data.position.id;
-        const updatePositionResult = await employeesRepository.updatePosition(employeeId, positionData, currentPosition)
+        const currentPosition = resultValidatesEmployeeId.data.position.id;
+        const updatePositionResult = await employeesRepository.updatePosition(employeeId, positionId, currentPosition)
 
         return updatePositionResult;
+
+    }
+    catch (err) {
+
+        logger.error("An unexpected error has occurred.Details", err);
+        return createServiceErrors.unexpectedError(err);
+
+    }
+}
+
+employeesService.assignOrUpdateDepartment = async function (employeeId, departmentId) {
+    try {
+        const resultValidatesPositionId = await positionValidate(positionId)
+
+        if (resultValidatesPositionId.success === false) {
+            return resultValidatesPositionId;
+        }
+        const resultValidatesEmployeeId = await employeeValidatesAndSearch(employeeId);
+
+        if (resultValidatesEmployeeId.success === false) {
+            return resultValidatesEmployeeId
+        }
+
+
+        if (resultValidatesEmployeeId.data.department === null) {
+
+            const resultAssignDepartment
+            return resultAssignDepartment;
+
+        }
+
+        const currentDepartmentId = employeeSearch.data.department.id;
+
+        if(currentDepartmentId !== departmentId.department){
+            const updateDepartmentResult
+        }
+        
+
+        return {
+            success:true
+        };
 
     }
     catch (err) {
