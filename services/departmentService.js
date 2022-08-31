@@ -4,11 +4,40 @@ const validator = require('../validator/validatesInputData');
 const departmentRepository = require('../repositories/department/departmentRepository');
 const employeesService = require('./employeesService');
 
+
 const logger = require('../logger/logger');
 
 const createServiceErrors = require('./errors/createServiceErrors')
 const departmentSchemaValidator = require('../models/department/schemaValidator');
+const dbConnection = require('../database/dbConnection');
+const assignEmployeeToDepartment = require('../commands/assignEmployeeToDepartment');
+const moveEmployeeToDepartment = require('../commands/moveEmployeeToDepartment');
 
+async function assignEmployeesValidate(departmentId, employeesIds) {
+    const validatesId = validator.isNumber(departmentId);
+
+    if (validatesId.error) {
+        return createServiceErrors.invalidId(validatesId.error);
+    }
+
+    const departmentSearch = await departmentService.getById(departmentId)
+
+    if (departmentSearch.success === false) {
+        return departmentSearch
+    }
+
+    const validationErrors = employeesIds.map(departmentSchemaValidator.validateEmployeeId);
+
+    const validatesErrorFilters = validationErrors.filter(item => item.error)
+
+    if (validatesErrorFilters.length !== 0) {
+        return createServiceErrors.invalidData(validatesErrorFilters)
+    }
+
+    return {
+        success: true
+    }
+}
 
 
 departmentService.getAll = async function (ids) {
@@ -67,30 +96,14 @@ departmentService.createNewDepartment = async function (departmentData) {
     }
 }
 
-
 departmentService.assignEmployees = async function (departmentId, employeesIds) {
-
     try {
         employeesIds = [employeesIds].flat();
 
-        const validatesId = validator.isNumber(departmentId);
+        const resultValidate = assignEmployeesValidate(departmentId, employeesIds)
 
-        if (validatesId.error) {
-            return createServiceErrors.invalidId(validatesId.error);
-        }
-
-        const departmentSearch = await this.getById(departmentId)
-
-        if (departmentSearch.success === false) {
-            return departmentSearch
-        }
-
-        const validationErrors = employeesIds.map(departmentSchemaValidator.validateEmployeeId);
-
-        const validatesErrorFilters = validationErrors.filter(item => item.error)
-
-        if (validatesErrorFilters.length !== 0) {
-            return createServiceErrors.invalidData(validatesErrorFilters)
+        if (resultValidate.success === false) {
+            return resultValidate;
         }
 
         const employeesIdsArray = employeesIds.map(employee => employee.employeeId)
@@ -99,21 +112,23 @@ departmentService.assignEmployees = async function (departmentId, employeesIds) 
         const employeesToAssign = foundEmployees.data.filter(employee => employee.department == null)
         const employeesToMove = foundEmployees.data.filter(employee => employee.department && employee.department.id !== departmentId);
 
-        const employeeIdsObject = {
-            employeesIdsWithDepartment: employeesToMove.map(employee => employee.id),
-            employeesIdsWithoutDepartment: employeesToAssign.map(employee => employee.id)
-        }
 
-        await departmentRepository.assignAndMoveEmployees(departmentId, employeeIdsObject);
-
+        dbConnection.execute(async context => {
+            if (employeesToAssign.length) {
+                const idEmployeesToAssign = employeesToAssign.map(employee => employee.id)
+                assignEmployeeToDepartment(departmentId, idEmployeesToAssign, context)
+            }
+            if (employeesToMove.length) {
+                const idEmployeesToMove = employeesToMove.map(employee => employee.id)
+                moveEmployeeToDepartment(departmentId, idEmployeesToMove, context)
+            }
+        })
         return {
-            success: true,
+            success: true
         }
-
     }
 
     catch (err) {
-
         return createServiceErrors.unexpectedError(err)
     }
 
@@ -129,21 +144,25 @@ departmentService.updateById = async function (departmentId, departmentData) {
 
             return createServiceErrors.invalidId(validatesId.error);
 
-        } else if (resultValidationDepartmentData.error) {
+        }
+
+
+        if (resultValidationDepartmentData.error) {
 
             return createServiceErrors.invalidData(resultValidationDepartmentData.error);
 
         }
-        const resultUpdateDepartmentById = departmentRepository.updateById(departmentId, departmentData);
 
+        const resultUpdateDepartmentById = departmentRepository.updateById(departmentId, departmentData);
         return resultUpdateDepartmentById;
+        
     }
     catch (err) {
         return createServiceErrors.unexpectedError(err)
     }
-
-
 }
+
+
 
 departmentService.deleteById = async function (departmentId) {
     try {

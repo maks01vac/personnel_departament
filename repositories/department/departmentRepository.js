@@ -6,7 +6,7 @@ const sqlQuery = require('./script/sqlQuery');
 const pgFormat = require('pg-format');
 
 const createDatabaseError = require('../errors/databaseErrors');
-const dbPool = require('../../dbPool/dbPool');
+const dbPool = require('../../database/dbPool');
 
 const moveEmployees = async function (client, departmentId, moveEmployeeIds) {
 
@@ -23,8 +23,6 @@ const moveEmployees = async function (client, departmentId, moveEmployeeIds) {
     const insertHistoryData = moveEmployeeIds.map(employeeId => [dateNow, employeeId, departmentId]);
     const insertNewHistoryEntrySql = pgFormat(sqlQuery.insertNewEntryInHistory, insertHistoryData)
     await client.query(insertNewHistoryEntrySql);
-
-    
 
 }
 
