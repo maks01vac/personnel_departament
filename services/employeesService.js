@@ -12,12 +12,19 @@ const logger = require('../logger/logger');
 const createServiceErrors = require('./errors/createServiceErrors');
 const positionService = require('./positionService');
 
+const queryToGetDepartmentById = require('../queries/getDepartmentById');
+const dbConnection = require('../database/dbConnection');
+const moveEmployeeToDepartment = require('../commands/moveEmployeeToDepartment/moveEmployeeToDepartment');
+const assignEmployeeToDepartment = require('../commands/assignEmployeeToDepartment/assignEmployeeToDepartment');
+const createDatabaseError = require('../repositories/errors/databaseErrors');
+
+
 
 async function positionValidate(positionId) {
     const validatesPositionId = employeeSchemaValidator.positionAssignmentSchema(positionId)
 
     if (validatesPositionId.error) {
-        return createServiceErrors.invalidId(validatesId.error.details[0]);
+        return createServiceErrors.invalidId(validatesPositionId.error.details[0]);
     }
 
     const positionSearch = await positionService.getById(positionId.position);
@@ -34,14 +41,24 @@ async function departmentValidates(departmentId) {
     const validatesDepartmentId = employeeSchemaValidator.departmentAssignmentSchema(departmentId)
 
     if (validatesDepartmentId.error) {
-        return createServiceErrors.invalidId(validatesId.error.details[0]);
+        return createServiceErrors.invalidId(validatesDepartmentId.error.details[0]);
     }
 
-    const departmentSearch = await positionService.getById(positionId.position);
+
+    const departmentSearch = await dbConnection.execute(async context => {
+
+        return queryToGetDepartmentById(departmentId.department, context);
+
+    })
 
     if (departmentSearch.success === false) {
         return departmentSearch
     }
+
+    if(!departmentSearch.data.length){
+        return createDatabaseError.idNotFound(departmentId.department)
+    }
+
     return {
         success: true,
     }
@@ -52,18 +69,12 @@ async function employeeValidatesAndSearch(employeeId) {
     const validatesEmployeeId = validator.isNumber(employeeId)
 
     if (validatesEmployeeId.error) {
-        return createServiceErrors.invalidId(validatesId.error.details[0]);
+        return createServiceErrors.invalidId(validatesEmployeeId.error.details[0]);
     }
 
-    const employeeSearch = await employeesService.getById(positionId.position);
+    const employeeSearch = await employeesService.getById(employeeId);
 
-    if (employeeSearch.success === false) {
-        return employeeSearch
-    }
-    return {
-        success: true,
-        data: employeeSearch.data
-    }
+    return employeeSearch
 
 }
 
@@ -173,10 +184,10 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionId
 
 employeesService.assignOrUpdateDepartment = async function (employeeId, departmentId) {
     try {
-        const resultValidatesPositionId = await positionValidate(positionId)
+        const resultValidatesDepartmentId = await departmentValidates(departmentId)
 
-        if (resultValidatesPositionId.success === false) {
-            return resultValidatesPositionId;
+        if (resultValidatesDepartmentId.success === false) {
+            return resultValidatesDepartmentId;
         }
         const resultValidatesEmployeeId = await employeeValidatesAndSearch(employeeId);
 
@@ -184,25 +195,23 @@ employeesService.assignOrUpdateDepartment = async function (employeeId, departme
             return resultValidatesEmployeeId
         }
 
+        employeeId = [employeeId];
 
-        if (resultValidatesEmployeeId.data.department === null) {
+        dbConnection.execute(async context => {
+            if (resultValidatesEmployeeId.data.department == null) {
+                await assignEmployeeToDepartment(departmentId.department, employeeId, context)
+                return;
+            }
 
-            const resultAssignDepartment
-            return resultAssignDepartment;
-
-        }
-
-        const currentDepartmentId = employeeSearch.data.department.id;
-
-        if(currentDepartmentId !== departmentId.department){
-            const updateDepartmentResult
-        }
-        
+            if (resultValidatesEmployeeId.data.department.id !== departmentId.department) {
+                await moveEmployeeToDepartment(departmentId.department, employeeId, context)
+                return;
+            }
+        })
 
         return {
-            success:true
+            success: true,
         };
-
     }
     catch (err) {
 

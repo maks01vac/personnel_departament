@@ -60,7 +60,7 @@ employeesController.assignPositionToEmployee = async function (req, res, next) {
 };
 
 
-employeesController.assignPositionToEmployee = async function (req, res, next) {
+employeesController.assignDepartmentToEmployee = async function (req, res, next) {
   const reqBody = req.body;
   const id = req.params.id;
 
