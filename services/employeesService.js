@@ -12,15 +12,15 @@ const logger = require('../logger/logger');
 const createServiceErrors = require('./errors/createServiceErrors');
 const positionService = require('./positionService');
 
-const queryToGetDepartmentById = require('../queries/getDepartmentById');
+const getDepartmentByIdQuery = require('../queries/getDepartmentById');
 const dbConnection = require('../database/dbConnection');
-const moveEmployeeToDepartment = require('../commands/moveEmployeeToDepartment/moveEmployeeToDepartment');
-const assignEmployeeToDepartment = require('../commands/assignEmployeeToDepartment/assignEmployeeToDepartment');
+const moveEmployeeToDepartment = require('../commands/moveEmployeeToDepartment');
+const assignEmployeeToDepartment = require('../commands/assignEmployeeToDepartment');
 const createDatabaseError = require('../repositories/errors/databaseErrors');
 
 
 
-async function positionValidate(positionId) {
+async function validatePosition(positionId) {
     const validatesPositionId = employeeSchemaValidator.positionAssignmentSchema(positionId)
 
     if (validatesPositionId.error) {
@@ -37,7 +37,7 @@ async function positionValidate(positionId) {
     }
 }
 
-async function departmentValidates(departmentId) {
+async function validateDepartment(departmentId) {
     const validatesDepartmentId = employeeSchemaValidator.departmentAssignmentSchema(departmentId)
 
     if (validatesDepartmentId.error) {
@@ -47,7 +47,7 @@ async function departmentValidates(departmentId) {
 
     const departmentSearch = await dbConnection.execute(async context => {
 
-        return queryToGetDepartmentById(departmentId.department, context);
+        return getDepartmentByIdQuery(departmentId.department, context);
 
     })
 
@@ -65,7 +65,7 @@ async function departmentValidates(departmentId) {
 
 }
 
-async function employeeValidatesAndSearch(employeeId) {
+async function queryAndValidateEmployee(employeeId) {
     const validatesEmployeeId = validator.isNumber(employeeId)
 
     if (validatesEmployeeId.error) {
@@ -116,10 +116,9 @@ employeesService.getById = async function (employeeId) {
             resultGetById.data = mappingData[0];
 
         }
-
-
-        return await resultGetById;
+        return  resultGetById;
     }
+    
     catch (err) {
 
         logger.error("An unexpected error has occurred.Details", err)
@@ -150,12 +149,12 @@ employeesService.createNewEmployee = async function (employeeData) {
 employeesService.assignOrUpdatePosition = async function (employeeId, positionId) {
     try {
 
-        const resultValidatesPositionId = await positionValidate(positionId)
+        const resultValidatesPositionId = await validatePosition(positionId)
 
         if (resultValidatesPositionId.success === false) {
             return resultValidatesPositionId;
         }
-        const resultValidatesEmployeeId = await employeeValidatesAndSearch(employeeId);
+        const resultValidatesEmployeeId = await queryAndValidateEmployee(employeeId);
 
         if (resultValidatesEmployeeId.success === false) {
             return resultValidatesEmployeeId
@@ -184,12 +183,12 @@ employeesService.assignOrUpdatePosition = async function (employeeId, positionId
 
 employeesService.assignOrUpdateDepartment = async function (employeeId, departmentId) {
     try {
-        const resultValidatesDepartmentId = await departmentValidates(departmentId)
+        const resultValidatesDepartmentId = await validateDepartment(departmentId)
 
         if (resultValidatesDepartmentId.success === false) {
             return resultValidatesDepartmentId;
         }
-        const resultValidatesEmployeeId = await employeeValidatesAndSearch(employeeId);
+        const resultValidatesEmployeeId = await queryAndValidateEmployee(employeeId);
 
         if (resultValidatesEmployeeId.success === false) {
             return resultValidatesEmployeeId
@@ -197,21 +196,18 @@ employeesService.assignOrUpdateDepartment = async function (employeeId, departme
 
         employeeId = [employeeId];
 
-        dbConnection.execute(async context => {
+        const assignOrUpdateDepartmentResult = dbConnection.execute(async context => {
             if (resultValidatesEmployeeId.data.department == null) {
-                await assignEmployeeToDepartment(departmentId.department, employeeId, context)
-                return;
+                await assignEmployeeToDepartment(departmentId.department, employeeId, context);
             }
 
-            if (resultValidatesEmployeeId.data.department.id !== departmentId.department) {
+            if (resultValidatesEmployeeId.data.department?.id !== departmentId.department) {
                 await moveEmployeeToDepartment(departmentId.department, employeeId, context)
-                return;
             }
+            return [];
         })
 
-        return {
-            success: true,
-        };
+        return assignOrUpdateDepartmentResult
     }
     catch (err) {
 

@@ -19,14 +19,13 @@ const dbConnection = {
         try {
             await dbClient.query('BEGIN;')
 
-
             const response = await sqlCommand(queryExecutorFactory(dbClient))
 
             await dbClient.query('COMMIT');
 
             return {
                 success: true,
-                data: response.rows
+                data: response?.rows
             }
         }
         catch (err) {
@@ -36,7 +35,7 @@ const dbConnection = {
                 success:false,
                 error:{
                     details:err
-                    
+
                 }
             }
         }
