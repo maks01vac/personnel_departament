@@ -1,20 +1,12 @@
-const pgFormat = require('pg-format');
-const sqlQuery = require('../../repositories/department/script/sqlQuery');
+const moveEmployeeToDepartment = require("./moveEmployeeToDepartment");
+const trackHistoryMovementChanges = require("./trackHistoryMovementChanges");
 
-async function moveEmployeeToDepartment(departmentId,moveEmployeeIds,context){
-    const dateNow = new Date();
 
-    const moveEmployeesSql = pgFormat(sqlQuery.moveEmployeesToAnotherDepartment,
-        [departmentId],
-        moveEmployeeIds);
-    await context.execSql(moveEmployeesSql);
+async function moveEmployeeToDepartmentAndTrackHistory(departmentId,moveEmployeeIds,context){
 
-    const updateDateToSql = pgFormat(sqlQuery.updateDateTo, moveEmployeeIds)
-    await context.execSql(updateDateToSql, [dateNow]);
+    await moveEmployeeToDepartment(departmentId,moveEmployeeIds,context);
 
-    const insertHistoryData = moveEmployeeIds.map(employeeId => [dateNow, employeeId, departmentId]);
-    const insertNewHistoryEntrySql = pgFormat(sqlQuery.insertNewEntryInHistory, insertHistoryData)
-    await context.execSql(insertNewHistoryEntrySql);
+    await trackHistoryMovementChanges(departmentId,moveEmployeeIds,context);
 
 }
-module.exports = moveEmployeeToDepartment
+module.exports = moveEmployeeToDepartmentAndTrackHistory

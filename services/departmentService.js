@@ -13,7 +13,31 @@ const dbConnection = require('../database/dbConnection');
 const assignEmployeeToDepartment = require('../commands/assignEmployeeToDepartment');
 const moveEmployeeToDepartment = require('../commands/moveEmployeeToDepartment');
 
+async function assignEmployeesValidate(departmentId, employeesIds) {
+    const validatesId = validator.isNumber(departmentId);
 
+    if (validatesId.error) {
+        return createServiceErrors.invalidId(validatesId.error);
+    }
+
+    const departmentSearch = await departmentService.getById(departmentId)
+
+    if (departmentSearch.success === false) {
+        return departmentSearch
+    }
+
+    const validationErrors = employeesIds.map(departmentSchemaValidator.validateEmployeeId);
+
+    const validatesErrorFilters = validationErrors.filter(item => item.error)
+
+    if (validatesErrorFilters.length !== 0) {
+        return createServiceErrors.invalidData(validatesErrorFilters)
+    }
+
+    return {
+        success: true
+    }
+}
 
 
 departmentService.getAll = async function (ids) {
@@ -76,24 +100,10 @@ departmentService.assignEmployees = async function (departmentId, employeesIds) 
     try {
         employeesIds = [employeesIds].flat();
 
-        const validatesId = validator.isNumber(departmentId);
+        const resultValidate = assignEmployeesValidate(departmentId, employeesIds)
 
-        if (validatesId.error) {
-            return createServiceErrors.invalidId(validatesId.error);
-        }
-
-        const departmentSearch = await this.getById(departmentId)
-
-        if (departmentSearch.success === false) {
-            return departmentSearch
-        }
-
-        const validationErrors = employeesIds.map(departmentSchemaValidator.validateEmployeeId);
-
-        const validatesErrorFilters = validationErrors.filter(item => item.error)
-
-        if (validatesErrorFilters.length !== 0) {
-            return createServiceErrors.invalidData(validatesErrorFilters)
+        if (resultValidate.success === false) {
+            return resultValidate;
         }
 
         const employeesIdsArray = employeesIds.map(employee => employee.employeeId)
@@ -134,21 +144,25 @@ departmentService.updateById = async function (departmentId, departmentData) {
 
             return createServiceErrors.invalidId(validatesId.error);
 
-        } else if (resultValidationDepartmentData.error) {
+        }
+
+
+        if (resultValidationDepartmentData.error) {
 
             return createServiceErrors.invalidData(resultValidationDepartmentData.error);
 
         }
-        const resultUpdateDepartmentById = departmentRepository.updateById(departmentId, departmentData);
 
+        const resultUpdateDepartmentById = departmentRepository.updateById(departmentId, departmentData);
         return resultUpdateDepartmentById;
+        
     }
     catch (err) {
         return createServiceErrors.unexpectedError(err)
     }
-
-
 }
+
+
 
 departmentService.deleteById = async function (departmentId) {
     try {

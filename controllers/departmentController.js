@@ -23,7 +23,6 @@ departmentController.getById = async function (req, res, next) {
     let id = req.params.id
 
     const resultGetDepartmentById = await departmentService.getById(id);
-    await departmentService.assignEmployeesV2();
 
     const {statusCode, response} = createResponse(resultGetDepartmentById);
     res.status(statusCode).send(response);

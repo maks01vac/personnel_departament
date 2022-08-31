@@ -1,6 +1,6 @@
 
 const assignEmployeeSql = require('./assignEmployee')
-const trackHistoryDepartmentChange = require('./trackHistoryDepartmentChange')
+const trackHistoryDepartmentChange = require('./trackHistoryAssignmentChanges')
 
 
 async function assignEmployeeToDepartment(departmentId,assignEmployeeIds,context) {
