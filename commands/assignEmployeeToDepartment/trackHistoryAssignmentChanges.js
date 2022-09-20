@@ -1,5 +1,5 @@
 const pgFormat = require('pg-format');
-const sqlQuery = require('../../repositories/department/script/sqlQuery');
+const sqlQuery = require('./sql/sql');
 
 async function trackHistoryDepartmentChange (departmentId, assignEmployeeIds, context){
 

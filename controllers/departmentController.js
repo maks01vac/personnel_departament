@@ -2,7 +2,6 @@ const departmentController = {};
 
 const logger = require('../logger/logger')
 const departmentService = require('../services/departmentService');
-const mappers = require('./errors/mappers');
 const createResponse = require('./createResponse')
 
 

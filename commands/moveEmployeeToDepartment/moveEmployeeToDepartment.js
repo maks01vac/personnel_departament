@@ -1,5 +1,5 @@
 const pgFormat = require('pg-format');
-const sqlQuery = require('../../repositories/department/script/sqlQuery');
+const sqlQuery = require('./sql/sql');
 
 async function moveEmployeeToDepartment(departmentId,moveEmployeeIds,context){
     const moveEmployeesSql = pgFormat(sqlQuery.moveEmployeesToAnotherDepartment,

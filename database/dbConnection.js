@@ -19,16 +19,25 @@ const dbConnection = {
         try {
             await dbClient.query('BEGIN;')
 
-
             const response = await sqlCommand(queryExecutorFactory(dbClient))
 
             await dbClient.query('COMMIT');
 
-            return response
+            return {
+                success: true,
+                data: response?.rows
+            }
         }
         catch (err) {
 
             dbClient.query('ROLLBACK;')
+            return{
+                success:false,
+                error:{
+                    details:err
+
+                }
+            }
         }
         finally {
             dbClient.release();
